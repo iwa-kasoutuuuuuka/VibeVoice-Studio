@@ -1,9 +1,9 @@
-# VibeVoice Native 技術仕様書 (Technical Specifications)
+# VibeVoice Studio 技術仕様書 (Technical Specifications)
 
 ## 日本語 (Japanese)
 
 ### 1. システムアーキテクチャ
-VibeVoice Native は以下の 3 層構造で設計されています。
+VibeVoice Studio は以下の 3 層構造で設計されています。
 - **Frontend (WinUI 3)**: Windows App SDK を使用した UI 層。MVVM パターンにより、推論ロジックと UI を分離。
 - **Backend (C# / .NET 8)**: 推論エンジンのオーケストレーション、G2P 処理、オーディオ再生、自動ダウンロード管理。
 - **Inference Layer (ONNX Runtime)**: DirectML を介して、エクスポートされた ONNX モデルを実行。
@@ -20,7 +20,7 @@ VibeVoice Native は以下の 3 層構造で設計されています。
 ## English (English)
 
 ### 1. System Architecture
-VibeVoice Native is designed with a 3-layer architecture:
+VibeVoice Studio is designed with a 3-layer architecture:
 - **Frontend (WinUI 3)**: UI layer using Windows App SDK. MVVM pattern separates inference logic from the UI.
 - **Backend (C# / .NET 8)**: Orchestrates the inference engine, G2P processing, audio playback, and automatic download management.
 - **Inference Layer (ONNX Runtime)**: Executes exported ONNX models via DirectML for hardware acceleration.

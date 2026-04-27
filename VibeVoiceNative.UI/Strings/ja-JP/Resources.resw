@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
   <data name="AppTitle" xml:space="preserve">
-    <value>VibeVoice Native - スタンドアロン音声合成</value>
+    <value>VibeVoice Studio - スタンドアロン音声合成</value>
   </data>
   <data name="VoiceSettings.Text" xml:space="preserve">
     <value>ボイス設定</value>

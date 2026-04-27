@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
   <data name="AppTitle" xml:space="preserve">
-    <value>VibeVoice Native - Standalone TTS</value>
+    <value>VibeVoice Studio - Standalone TTS</value>
   </data>
   <data name="VoiceSettings.Text" xml:space="preserve">
     <value>Voice Settings</value>

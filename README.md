@@ -1,4 +1,4 @@
-# VibeVoice Native (Standalone C# TTS)
+# VibeVoice Studio (Standalone C# TTS)
 
 <p align="center">
   <img src="VibeVoiceNative.UI/Assets/AppIcon.png" width="200" height="200" alt="VibeVoice App Icon">
@@ -11,7 +11,7 @@
 ## 日本語 (Japanese)
 
 ### 概要
-VibeVoice Native は、Microsoft の VibeVoice モデルをベースにした、高性能でポータブルな Windows 11 ネイティブ TTS（音声合成）アプリケーションです。Python ランタイムを一切必要とせず、C# と ONNX Runtime のみで動作するように設計されています。
+VibeVoice Studio は、Microsoft の VibeVoice モデルをベースにした、高性能でポータブルな Windows 11 ネイティブ TTS（音声合成）アプリケーションです。Python ランタイムを一切必要とせず、C# と ONNX Runtime のみで動作するように設計されています。
 
 ### 主な機能
 - **ゼロショット・ボイスクローニング**: 5〜10秒の参照音声（WAV）を読み込むだけで、その話者の声を再現。
@@ -31,7 +31,7 @@ VibeVoice Native は、Microsoft の VibeVoice モデルをベースにした、
 ## English (English)
 
 ### Overview
-VibeVoice Native is a high-performance, portable Windows 11 native TTS (Text-to-Speech) application based on Microsoft's VibeVoice model. It is designed to run purely on C# and ONNX Runtime, eliminating the need for a Python runtime.
+VibeVoice Studio is a high-performance, portable Windows 11 native TTS (Text-to-Speech) application based on Microsoft's VibeVoice model. It is designed to run purely on C# and ONNX Runtime, eliminating the need for a Python runtime.
 
 ### Key Features
 - **Zero-shot Voice Cloning**: Reproduce any voice by simply loading a 5-10 second reference audio (WAV).
