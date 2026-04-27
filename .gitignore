@@ -1,0 +1,26 @@
+# .gitignore for VibeVoice Native
+
+# Build outputs
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docstates
+
+# Models (too large for Git)
+models/
+*.onnx
+
+# Visual Studio
+.vs/
+_ReSharper.Caches/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.cache
+*.opendb
+
+# OS generated files
+.DS_Store
+Thumbs.db

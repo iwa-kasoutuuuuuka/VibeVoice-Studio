@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="VibeVoiceNative.Inference/VibeVoiceNative.Inference.csproj" />
+  <Project Path="VibeVoiceNative.UI/VibeVoiceNative.UI.csproj">
+    <Platform Project="x86" />
+  </Project>
+</Solution>

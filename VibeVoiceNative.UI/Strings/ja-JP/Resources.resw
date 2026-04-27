@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="AppTitle" xml:space="preserve">
+    <value>VibeVoice Native - スタンドアロン音声合成</value>
+  </data>
+  <data name="VoiceSettings.Text" xml:space="preserve">
+    <value>ボイス設定</value>
+  </data>
+  <data name="RefAudioLabel.Text" xml:space="preserve">
+    <value>参照音声 (.wav)</value>
+  </data>
+  <data name="LanguageLabel.Text" xml:space="preserve">
+    <value>言語</value>
+  </data>
+  <data name="VoiceGalleryLabel.Text" xml:space="preserve">
+    <value>ボイスギャラリー</value>
+  </data>
+  <data name="InputTextHeader.Header" xml:space="preserve">
+    <value>入力テキスト</value>
+  </data>
+  <data name="GenerateButton.Content" xml:space="preserve">
+    <value>生成 ＆ 再生</value>
+  </data>
+  <data name="SaveButton.Content" xml:space="preserve">
+    <value>WAV 保存</value>
+  </data>
+  <data name="AddGalleryButton.Content" xml:space="preserve">
+    <value>ギャラリーに追加</value>
+  </data>
+</root>

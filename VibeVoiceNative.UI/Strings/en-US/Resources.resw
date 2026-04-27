@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="AppTitle" xml:space="preserve">
+    <value>VibeVoice Native - Standalone TTS</value>
+  </data>
+  <data name="VoiceSettings.Text" xml:space="preserve">
+    <value>Voice Settings</value>
+  </data>
+  <data name="RefAudioLabel.Text" xml:space="preserve">
+    <value>Reference Audio (.wav)</value>
+  </data>
+  <data name="LanguageLabel.Text" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="VoiceGalleryLabel.Text" xml:space="preserve">
+    <value>Voice Gallery</value>
+  </data>
+  <data name="InputTextHeader.Header" xml:space="preserve">
+    <value>Input Text</value>
+  </data>
+  <data name="GenerateButton.Content" xml:space="preserve">
+    <value>Generate &amp; Play</value>
+  </data>
+  <data name="SaveButton.Content" xml:space="preserve">
+    <value>Save WAV</value>
+  </data>
+  <data name="AddGalleryButton.Content" xml:space="preserve">
+    <value>Add to Gallery</value>
+  </data>
+</root>

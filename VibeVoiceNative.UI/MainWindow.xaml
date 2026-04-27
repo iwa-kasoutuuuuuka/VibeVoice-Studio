@@ -1,0 +1,91 @@
+<Window
+    x:Class="VibeVoiceNative.UI.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:VibeVoiceNative.UI"
+    xmlns:models="using:VibeVoiceNative.UI.Models"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    x:Uid="AppTitle"
+    Title="VibeVoice Native - Standalone TTS">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Sidebar: Voice Gallery & Settings -->
+        <StackPanel Grid.Column="0" Padding="20" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,1,0">
+            <TextBlock x:Uid="VoiceSettings" Style="{StaticResource TitleTextBlockStyle}" Margin="0,0,0,20"/>
+            
+            <TextBlock x:Uid="RefAudioLabel"/>
+            <Grid ColumnSpacing="10" Margin="0,5,0,15">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox Text="{x:Bind ViewModel.RefAudioPath, Mode=TwoWay}" PlaceholderText="Select WAV file..."/>
+                <Button Grid.Column="1" Content="Browse"/>
+            </Grid>
+
+            <TextBlock x:Uid="LanguageLabel"/>
+            <ComboBox x:Name="LanguageCombo" HorizontalAlignment="Stretch" Margin="0,5,0,15" SelectedIndex="0">
+                <ComboBoxItem Content="Japanese (日本語)"/>
+                <ComboBoxItem Content="English (English)"/>
+            </ComboBox>
+
+            <TextBlock x:Uid="VoiceGalleryLabel" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,15,0,5"/>
+            <ListView x:Name="VoiceListView" 
+                      ItemsSource="{x:Bind ViewModel.VoiceGallery}" 
+                      SelectedItem="{x:Bind ViewModel.SelectedVoice, Mode=TwoWay}"
+                      Height="200" Margin="0,0,0,15"
+                      BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="models:VoiceModel">
+                        <StackPanel Padding="5">
+                            <TextBlock Text="{x:Bind Name}" FontWeight="Bold"/>
+                            <TextBlock Text="{x:Bind Language}" Style="{StaticResource CaptionTextBlockStyle}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <Button x:Uid="AddGalleryButton" Command="{x:Bind ViewModel.AddToGalleryCommand}" 
+                    HorizontalAlignment="Stretch" Style="{StaticResource AccentButtonStyle}"/>
+        </StackPanel>
+
+        <!-- Main Content: Text Input & Controls -->
+        <Grid Grid.Column="1" Padding="30">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Text Input Area -->
+            <TextBox x:Name="InputTextBox" Grid.Row="0" x:Uid="InputTextHeader"
+                     TextWrapping="Wrap" AcceptsReturn="True" 
+                     PlaceholderText="Enter text here to generate speech..."
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+
+            <!-- Progress & Visualization -->
+            <StackPanel Grid.Row="1" Margin="0,20,0,0">
+                <ProgressBar Value="{x:Bind ViewModel.Progress, Mode=OneWay}" Height="10" Margin="0,0,0,10"/>
+                <!-- Waveform Visualizer Placeholder -->
+                <Canvas x:Name="WaveformCanvas" Height="100" Background="{ThemeResource ControlFillColorDefaultBrush}"/>
+            </StackPanel>
+
+            <!-- Action Buttons -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="15" Margin="0,20,0,0">
+                <Button x:Name="GeneratePlayButton" x:Uid="GenerateButton"
+                        Style="{StaticResource AccentButtonStyle}" Width="150" Height="45"
+                        Command="{x:Bind ViewModel.GenerateAudioCommand}"/>
+                <Button x:Name="SaveButton" x:Uid="SaveButton"
+                        Command="{x:Bind ViewModel.SaveAudioCommand}"
+                        Width="100" Height="45"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
