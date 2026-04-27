@@ -10,6 +10,7 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="MeCab.DotNet" Version="1.2.0" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.24.4" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.25.0" />
     <PackageReference Include="NAudio" Version="2.3.0" />
   </ItemGroup>
 

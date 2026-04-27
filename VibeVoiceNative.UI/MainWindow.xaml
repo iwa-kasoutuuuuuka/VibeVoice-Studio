@@ -36,6 +36,15 @@
                 <ComboBoxItem Content="English (English)"/>
             </ComboBox>
 
+            <TextBlock Text="Speed"/>
+            <Slider Value="{x:Bind ViewModel.Speed, Mode=TwoWay}" Minimum="0.5" Maximum="2.0" StepFrequency="0.1" Margin="0,0,0,10"/>
+            
+            <TextBlock Text="Pitch"/>
+            <Slider Value="{x:Bind ViewModel.Pitch, Mode=TwoWay}" Minimum="-12" Maximum="12" StepFrequency="1" Margin="0,0,0,10"/>
+
+            <TextBlock Text="Volume"/>
+            <Slider Value="{x:Bind ViewModel.Volume, Mode=TwoWay}" Minimum="0" Maximum="1" StepFrequency="0.1" Margin="0,0,0,15"/>
+
             <TextBlock x:Uid="VoiceGalleryLabel" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,15,0,5"/>
             <ListView x:Name="VoiceListView" 
                       ItemsSource="{x:Bind ViewModel.VoiceGallery}" 
@@ -81,7 +90,8 @@
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="15" Margin="0,20,0,0">
                 <Button x:Name="GeneratePlayButton" x:Uid="GenerateButton"
                         Style="{StaticResource AccentButtonStyle}" Width="150" Height="45"
-                        Command="{x:Bind ViewModel.GenerateAudioCommand}"/>
+                        Command="{x:Bind ViewModel.GenerateAudioCommand}"
+                        CommandParameter="{x:Bind InputTextBox.Text, Mode=OneWay}"/>
                 <Button x:Name="SaveButton" x:Uid="SaveButton"
                         Command="{x:Bind ViewModel.SaveAudioCommand}"
                         Width="100" Height="45"/>

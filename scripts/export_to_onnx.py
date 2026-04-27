@@ -13,15 +13,33 @@ VibeVoice ONNX Export Script
 This script exports the sub-components of VibeVoice to ONNX format for C# / .NET 8 integration.
 """
 
+def export_and_optimize(model, dummy_input, output_path, input_names, output_names, dynamic_axes):
+    model.eval()
+    torch.onnx.export(
+        model,
+        dummy_input,
+        output_path,
+        input_names=input_names,
+        output_names=output_names,
+        dynamic_axes=dynamic_axes,
+        opset_version=17,
+        do_constant_folding=True
+    )
+    print(f"✅ Model exported: {output_path}")
+    
+    # FP16 量子化
+    model_fp32 = onnx.load(output_path)
+    model_fp16 = float16.convert_float_to_float16(model_fp32)
+    fp16_path = output_path.replace(".onnx", "_fp16.onnx")
+    onnx.save(model_fp16, fp16_path)
+    print(f"🚀 Optimized to FP16: {fp16_path}")
+
 def export_text_encoder(model, output_path):
     """
     Text Encoder (Qwen2.5 based) Export
     Input: input_ids [batch, seq_len], attention_mask [batch, seq_len]
     Output: last_hidden_state [batch, seq_len, hidden_size]
     """
-    model.eval()
-    dummy_input_ids = torch.randint(0, 32000, (1, 32))
-    dummy_mask = torch.ones((1, 32))
     
     torch.onnx.export(
         model,

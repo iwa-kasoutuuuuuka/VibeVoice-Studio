@@ -6,9 +6,9 @@ namespace VibeVoiceNative.Inference.Audio
 {
     public class AudioPlayer : IDisposable
     {
-        private IWavePlayer _outputDevice;
-        private BufferedWaveProvider _bufferedWaveProvider;
-        private VolumeSampleProvider _volumeProvider;
+        private IWavePlayer _outputDevice = null!;
+        private BufferedWaveProvider _bufferedWaveProvider = null!;
+        private VolumeSampleProvider _volumeProvider = null!;
         private readonly WaveFormat _waveFormat;
 
         public AudioPlayer(int sampleRate = 24000, int channels = 1)

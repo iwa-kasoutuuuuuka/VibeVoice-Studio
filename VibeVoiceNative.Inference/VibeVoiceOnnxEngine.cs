@@ -39,19 +39,35 @@ namespace VibeVoiceNative.Inference
             {
                 var options = new SessionOptions
                 {
-                    GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL
+                    GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,
+                    ExecutionMode = ExecutionMode.ORT_SEQUENTIAL
                 };
 
-                if (useGpu)
+                // 推論加速プロバイダーの優先順位設定
+                try
                 {
-                    // DirectML (Windows での最もポータブルな GPU 加速)
-                    try 
-                    { 
-                        options.AppendExecutionProvider_DML(0); 
-                    }
-                    catch (Exception ex)
+                    // 1. TensorRT (最強)
+                    options.AppendExecutionProvider_Tensorrt(0);
+                    options.AppendExecutionProvider_CUDA(0);
+                }
+                catch
+                {
+                    try
                     {
-                        Console.WriteLine($"DirectML initialization failed: {ex.Message}. Falling back to CPU.");
+                        // 2. CUDA (安定)
+                        options.AppendExecutionProvider_CUDA(0);
+                    }
+                    catch
+                    {
+                        try
+                        {
+                            // 3. DirectML (Windows ポータブル GPU)
+                            options.AppendExecutionProvider_DML(0);
+                        }
+                        catch
+                        {
+                            // 4. CPU (フォールバック)
+                        }
                     }
                 }
 
