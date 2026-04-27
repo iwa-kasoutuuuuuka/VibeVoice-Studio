@@ -286,6 +286,12 @@ namespace VibeVoiceNative.UI.ViewModels
                 return;
             }
 
+            if (!File.Exists(RefAudioPath))
+            {
+                StatusMessage = $"Reference audio not found: {RefAudioPath}";
+                return;
+            }
+
             // エンジンが未初期化なら自動的に初期化を試みる
             if (!IsEngineReady)
             {
@@ -303,25 +309,31 @@ namespace VibeVoiceNative.UI.ViewModels
             var sentences = TextSplitter.SplitIntoSentences(InputText);
             var allAudio = new List<float>();
             
-            for (int i = 0; i < sentences.Count; i++)
+            try
             {
-                var progressReporter = new Progress<double>(v => 
+                for (int i = 0; i < sentences.Count; i++)
                 {
-                    // 文ごとの進捗を全体の進捗にマッピング
-                    Progress = ((double)i / sentences.Count * 100) + (v / sentences.Count);
-                });
+                    var progressReporter = new Progress<double>(v => 
+                    {
+                        // 文ごとの進捗を全体の進捗にマッピング
+                        Progress = ((double)i / sentences.Count * 100) + (v / sentences.Count);
+                    });
 
-                float[] audioData = await _engine.GenerateAudioAsync(sentences[i], RefAudioPath, progressReporter);
-                
-                // TODO: ここで Speed/Pitch を適用するロジックをエンジン側に持たせるか、後処理する
-                
-                _player.AddSamples(audioData);
-                allAudio.AddRange(audioData);
+                    float[] audioData = await _engine.GenerateAudioAsync(sentences[i], RefAudioPath, progressReporter);
+                    
+                    _player.AddSamples(audioData);
+                    allAudio.AddRange(audioData);
+                }
+
+                _lastGeneratedAudio = allAudio.ToArray();
+                Progress = 100;
+                StatusMessage = "Generation complete.";
             }
-
-            _lastGeneratedAudio = allAudio.ToArray();
-            Progress = 100;
-            StatusMessage = "Generation complete.";
+            catch (Exception ex)
+            {
+                StatusMessage = $"Generation Error: {ex.Message}";
+                _player.Stop();
+            }
         }
 
         private bool CanGenerate() => !IsDownloading;
