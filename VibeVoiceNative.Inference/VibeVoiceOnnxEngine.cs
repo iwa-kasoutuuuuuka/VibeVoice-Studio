@@ -18,21 +18,31 @@ namespace VibeVoiceNative.Inference
     public class VibeVoiceOnnxEngine : IVibeVoiceEngine, IDisposable
     {
         private InferenceSession _textEncoder = null!;
+        private InferenceSession _lmPrefill = null!;
+        private InferenceSession _lmStep = null!;
+        private InferenceSession _textToCond = null!;
+        private InferenceSession _predictionHead = null!;
         private InferenceSession _diffusionDecoder = null!;
         private InferenceSession _vocoder = null!;
         private bool _isInitialized = false;
 
         public async Task InitializeAsync(string modelDir, bool useGpu, IProgress<double>? progress = null)
         {
-            var downloader = new Utils.ModelDownloader(modelDir);
             progress?.Report(0);
-            await downloader.DownloadMissingModelsAsync(progress);
             
-            string[] requiredFiles = { "text_encoder.onnx", "diffusion_decoder.onnx", "vocoder.onnx" };
+            string[] requiredFiles = { 
+                "text_encoder.onnx", "text_encoder.onnx.data",
+                "tts_lm_prefill.onnx", "tts_lm_prefill.onnx.data",
+                "tts_lm_step.onnx", "tts_lm_step.onnx.data",
+                "text_to_condition.onnx", "text_to_condition.onnx.data",
+                "prediction_head.onnx", "prediction_head.onnx.data",
+                "acoustic_connector.onnx", "acoustic_connector.onnx.data",
+                "acoustic_decoder.onnx", "acoustic_decoder.onnx.data" 
+            };
             foreach (var file in requiredFiles)
             {
                 if (!File.Exists(Path.Combine(modelDir, file)))
-                    throw new FileNotFoundException($"Required model file missing after download attempt: {file}");
+                    throw new FileNotFoundException($"Required model file missing: {file}");
             }
 
             await Task.Run(() =>
@@ -72,8 +82,12 @@ namespace VibeVoiceNative.Inference
                 }
 
                 _textEncoder = new InferenceSession(Path.Combine(modelDir, "text_encoder.onnx"), options);
-                _diffusionDecoder = new InferenceSession(Path.Combine(modelDir, "diffusion_decoder.onnx"), options);
-                _vocoder = new InferenceSession(Path.Combine(modelDir, "vocoder.onnx"), options);
+                _lmPrefill = new InferenceSession(Path.Combine(modelDir, "tts_lm_prefill.onnx"), options);
+                _lmStep = new InferenceSession(Path.Combine(modelDir, "tts_lm_step.onnx"), options);
+                _textToCond = new InferenceSession(Path.Combine(modelDir, "text_to_condition.onnx"), options);
+                _predictionHead = new InferenceSession(Path.Combine(modelDir, "prediction_head.onnx"), options);
+                _diffusionDecoder = new InferenceSession(Path.Combine(modelDir, "acoustic_connector.onnx"), options);
+                _vocoder = new InferenceSession(Path.Combine(modelDir, "acoustic_decoder.onnx"), options);
 
                 _isInitialized = true;
             });
@@ -83,15 +97,34 @@ namespace VibeVoiceNative.Inference
         {
             if (!_isInitialized) throw new InvalidOperationException("Engine not initialized.");
 
-            // Placeholder logic for the full pipeline
-            progress?.Report(10);
-            await Task.Delay(500); // Simulate processing
-            
-            progress?.Report(50);
-            await Task.Delay(500);
+            return await Task.Run(() =>
+            {
+                progress?.Report(2);
+                
+                // 1. Text Processing
+                var textProcessor = new Text.VibeVoiceTextProcessor();
+                long[] tokens = textProcessor.TextToTokens(text, "japanese");
 
-            progress?.Report(100);
-            return new float[16000]; // Dummy audio
+                progress?.Report(5);
+
+                // 2. Audio Processing
+                var audioProcessor = new Audio.AudioProcessor();
+                float[,] melSpec = audioProcessor.ProcessReferenceAudio(refAudioPath);
+
+                // 3. Run Pipeline
+                return VibeVoicePipeline.RunInference(
+                    tokens,
+                    melSpec,
+                    _textEncoder,
+                    _lmPrefill,
+                    _lmStep,
+                    _textToCond,
+                    _predictionHead,
+                    _diffusionDecoder,
+                    _vocoder,
+                    progress
+                );
+            });
         }
 
         public void Stop() { }
@@ -99,6 +132,10 @@ namespace VibeVoiceNative.Inference
         public void Dispose()
         {
             _textEncoder?.Dispose();
+            _lmPrefill?.Dispose();
+            _lmStep?.Dispose();
+            _textToCond?.Dispose();
+            _predictionHead?.Dispose();
             _diffusionDecoder?.Dispose();
             _vocoder?.Dispose();
         }

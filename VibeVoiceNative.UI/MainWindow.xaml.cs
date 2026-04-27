@@ -28,6 +28,17 @@ namespace VibeVoiceNative.UI
                 var file = await savePicker.PickSaveFileAsync();
                 return file?.Path;
             };
+
+            ViewModel.PickRefAudioFileAsync = async () =>
+            {
+                var openPicker = new FileOpenPicker();
+                InitializeWithWindow.Initialize(openPicker, WindowNative.GetWindowHandle(this));
+                openPicker.SuggestedStartLocation = PickerLocationId.MusicLibrary;
+                openPicker.FileTypeFilter.Add(".wav");
+
+                var file = await openPicker.PickSingleFileAsync();
+                return file?.Path;
+            };
         }
 
         private async void MainWindow_Activated(object sender, WindowActivatedEventArgs args)

@@ -35,5 +35,15 @@ VibeVoice Studio は、Microsoft の VibeVoice モデルをベースにした、
 1. Download the portable version or build using `dotnet publish`.
 2. Run `VibeVoiceStudio.exe`, and the models will be downloaded automatically.
 
+## ✨ Features
+- **Complete C# Native Inference Pipeline:** Uses `Microsoft.ML.OnnxRuntime` for true zero-shot TTS inference without Python dependencies.
+- **Integrated Tokenizer:** Uses `Tokenizers.DotNet` to natively load Hugging Face `tokenizer.json` for Qwen2 BPE tokenization.
+- **Native Audio Processing:** Implements real-time WAV resampling and 80-bin Mel Spectrogram extraction using `NAudio` and `MathNet.Numerics`.
+- **Advanced Diffusion Solver:** Includes a native C# implementation of the Euler ODE solver loop for Flow Matching acoustic generation.
+- **Automated Model Management:** Automatically downloads required ONNX files (including split `.data` weights) from Hugging Face on first launch with UI freeze protection.
+
+## 📦 Download
+Check the `publish_v1.1.0_new` directory for the fully self-contained portable Windows executable.
+
 ## License & Disclaimer
 This project is for research and personal use only. Please respect the "Responsible AI" guidelines and ethical considerations regarding voice cloning.
