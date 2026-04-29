@@ -29,7 +29,7 @@ namespace VibeVoiceNative.UI.ViewModels
         [ObservableProperty] public partial bool IsEnglish { get; set; }
         [ObservableProperty] public partial bool IsGenerating { get; set; }
         [ObservableProperty] public partial string SelectedDevice { get; set; } = "DirectML";
-        [ObservableProperty] public partial int InferenceSteps { get; set; } = 16; // Default: Balanced
+        [ObservableProperty] public partial int InferenceSteps { get; set; } = 16;
 
         public ObservableCollection<VoiceModel> FilteredVoiceGallery { get; } = new();
         public ObservableCollection<AudioDevice> AudioDevices { get; } = new();
@@ -61,8 +61,14 @@ namespace VibeVoiceNative.UI.ViewModels
         {
             _engine = engine;
             _player = new AudioPlayer();
-            _logger = new LoggerConfiguration().WriteTo.File("logs/ui_.log").CreateLogger();
             
+            if (!Directory.Exists("logs")) Directory.CreateDirectory("logs");
+            _logger = new LoggerConfiguration()
+                .WriteTo.File("logs/ui_.log", rollingInterval: RollingInterval.Day)
+                .CreateLogger();
+            
+            _logger.Information("MainViewModel initialized with high-speed parallel support.");
+
             SetupAudioDevices();
             InferenceSteps = 16;
         }
@@ -74,13 +80,26 @@ namespace VibeVoiceNative.UI.ViewModels
             if (AudioDevices.Count > 0) SelectedAudioDevice = AudioDevices[0];
         }
 
+        partial void OnSelectedDeviceChanged(string value)
+        {
+            _logger.Information("Device changed to {Device}, triggering re-init.", value);
+            _ = InitializeEngine(); // デバイス変更時に自動的にエンジンを再初期化
+        }
+
         [RelayCommand]
         public async Task InitializeEngine()
         {
-            StatusMessage = "Loading Engine...";
-            await _engine.InitializeAsync(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "models"), SelectedDevice);
-            IsEngineReady = true;
-            StatusMessage = "Engine Ready";
+            try {
+                IsEngineReady = false;
+                StatusMessage = $"Loading ({SelectedDevice})...";
+                string modelDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "models");
+                await _engine.InitializeAsync(modelDir, SelectedDevice);
+                IsEngineReady = true;
+                StatusMessage = "Engine Ready";
+            } catch (Exception ex) {
+                _logger.Error(ex, "Engine init failed.");
+                StatusMessage = "Init Error";
+            }
         }
 
         [RelayCommand]
@@ -91,14 +110,18 @@ namespace VibeVoiceNative.UI.ViewModels
 
             try {
                 IsGenerating = true;
+                StatusMessage = "Generating...";
                 var allAudio = new List<float>();
+                _player.Stop();
                 _player.Play(SelectedAudioDevice?.Id);
 
                 var sentences = TextSplitter.SplitIntoSentences(InputText);
                 var context = new VibeVoiceContext();
 
                 for (int i = 0; i < sentences.Count; i++) {
+                    if (!IsGenerating) break;
                     await foreach (var chunk in _engine.GenerateAudioStreamingAsync(sentences[i], RefAudioPath, Speed, Pitch, InferenceSteps, new Progress<double>(), context)) {
+                        if (!IsGenerating) break;
                         _player.AddSamples(chunk);
                         allAudio.AddRange(chunk);
                         CurrentAudioBuffer = chunk;
@@ -106,7 +129,10 @@ namespace VibeVoiceNative.UI.ViewModels
                 }
                 _lastGeneratedAudio = allAudio.ToArray();
                 StatusMessage = "Complete";
-            } finally { IsGenerating = false; }
+            } catch (Exception ex) {
+                _logger.Error(ex, "Gen failed.");
+                StatusMessage = "Gen Error";
+            } finally { IsGenerating = false; Progress = 100; }
         }
 
         [RelayCommand]
@@ -121,30 +147,42 @@ namespace VibeVoiceNative.UI.ViewModels
                 var lines = InputText.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                 int completed = 0;
 
-                // 並列実行 (CPU/GPU のリソースに合わせて並列数を制限)
-                var options = new ParallelOptions { MaxDegreeOfParallelism = (SelectedDevice == "CPU") ? 2 : 4 };
+                // GPU 推論時は並列数を上げ、CPU の場合は抑える
+                int maxConcurrency = (SelectedDevice == "CPU") ? 2 : 4;
+                var options = new ParallelOptions { MaxDegreeOfParallelism = maxConcurrency };
                 
                 await Parallel.ForEachAsync(lines.Select((text, index) => (text, index)), options, async (item, ct) => {
-                    var allAudio = new List<float>();
-                    await foreach (var chunk in _engine.GenerateAudioStreamingAsync(item.text, RefAudioPath, Speed, Pitch, InferenceSteps, new Progress<double>())) {
-                        allAudio.AddRange(chunk);
-                    }
-                    string path = Path.Combine(folder, $"{item.index + 1:D3}.wav");
-                    VibeVoiceNative.Inference.Audio.AudioExporter.SaveAsWav(path, allAudio.ToArray(), 24000);
+                    if (!IsGenerating) return;
                     
-                    Interlocked.Increment(ref completed);
-                    StatusMessage = $"Batch: {completed}/{lines.Length}";
-                    Progress = (double)completed / lines.Length * 100;
+                    var allAudio = new List<float>();
+                    try {
+                        await foreach (var chunk in _engine.GenerateAudioStreamingAsync(item.text, RefAudioPath, Speed, Pitch, InferenceSteps, new Progress<double>())) {
+                            if (!IsGenerating) break;
+                            allAudio.AddRange(chunk);
+                        }
+                        
+                        string path = Path.Combine(folder, $"{item.index + 1:D3}.wav");
+                        VibeVoiceNative.Inference.Audio.AudioExporter.SaveAsWav(path, allAudio.ToArray(), 24000);
+                        
+                        Interlocked.Increment(ref completed);
+                        StatusMessage = $"Batch: {completed}/{lines.Length}";
+                        Progress = (double)completed / lines.Length * 100;
+                    } catch (Exception ex) {
+                        _logger.Error(ex, "Batch item failed: {Text}", item.text);
+                    }
                 });
 
                 StatusMessage = "Batch Complete";
-            } finally { IsGenerating = false; }
+            } catch (Exception ex) {
+                _logger.Error(ex, "Batch export failed.");
+                StatusMessage = "Batch Error";
+            } finally { IsGenerating = false; Progress = 100; }
         }
 
         [RelayCommand] public void Stop() { _engine.Stop(); _player.Stop(); IsGenerating = false; }
-        [RelayCommand] public async Task SaveAudio() { /* Implementation same as before */ }
-        [RelayCommand] public void AddUserDict(string original) { /* Implementation same as before */ }
-        [RelayCommand] public void RemoveUserDict(UserDictionaryEntry entry) { /* Implementation same as before */ }
+        [RelayCommand] public async Task SaveAudio() { if (_lastGeneratedAudio != null && PickSaveFileAsync != null) { var path = await PickSaveFileAsync(); if (!string.IsNullOrEmpty(path)) VibeVoiceNative.Inference.Audio.AudioExporter.SaveAsWav(path, _lastGeneratedAudio, 24000); } }
+        [RelayCommand] public void AddUserDict(string original) { if (!string.IsNullOrWhiteSpace(original)) UserDictionary.Add(new UserDictionaryEntry { OriginalText = original }); }
+        [RelayCommand] public void RemoveUserDict(UserDictionaryEntry entry) { UserDictionary.Remove(entry); }
 
         public void Dispose() { _player?.Dispose(); (_engine as IDisposable)?.Dispose(); }
     }
