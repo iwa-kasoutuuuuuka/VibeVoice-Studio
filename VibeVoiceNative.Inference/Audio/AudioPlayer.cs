@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using NAudio.CoreAudioApi;
 
 namespace VibeVoiceNative.Inference.Audio
 {
@@ -11,15 +13,41 @@ namespace VibeVoiceNative.Inference.Audio
         private VolumeSampleProvider _volumeProvider = null!;
         private readonly WaveFormat _waveFormat;
 
+        public string? SelectedDeviceId { get; set; }
+
         public AudioPlayer(int sampleRate = 24000, int channels = 1)
         {
             _waveFormat = WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, channels);
             InitializePlayer();
         }
 
+        public static (string id, string name)[] GetDevices()
+        {
+            var devices = new List<(string, string)>();
+            using var enumerator = new MMDeviceEnumerator();
+            var endpoints = enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active);
+            foreach (var endpoint in endpoints)
+            {
+                devices.Add((endpoint.ID, endpoint.FriendlyName));
+            }
+            return devices.ToArray();
+        }
+
         private void InitializePlayer()
         {
-            _outputDevice = new WaveOutEvent(); // または WasapiOut
+            _outputDevice?.Dispose();
+            
+            if (string.IsNullOrEmpty(SelectedDeviceId))
+            {
+                _outputDevice = new WasapiOut(AudioClientShareMode.Shared, 100);
+            }
+            else
+            {
+                using var enumerator = new MMDeviceEnumerator();
+                var device = enumerator.GetDevice(SelectedDeviceId);
+                _outputDevice = new WasapiOut(device, AudioClientShareMode.Shared, false, 100);
+            }
+
             _bufferedWaveProvider = new BufferedWaveProvider(_waveFormat)
             {
                 DiscardOnBufferOverflow = true,
@@ -28,6 +56,15 @@ namespace VibeVoiceNative.Inference.Audio
 
             _volumeProvider = new VolumeSampleProvider(_bufferedWaveProvider.ToSampleProvider());
             _outputDevice.Init(_volumeProvider);
+        }
+
+        public void ChangeDevice(string deviceId)
+        {
+            SelectedDeviceId = deviceId;
+            float currentVolume = Volume;
+            Stop();
+            InitializePlayer();
+            Volume = currentVolume;
         }
 
         public void Play()

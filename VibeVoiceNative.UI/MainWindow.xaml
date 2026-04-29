@@ -4,105 +4,71 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:VibeVoiceNative.UI"
     xmlns:models="using:VibeVoiceNative.UI.Models"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    x:Uid="AppTitle"
-    Title="VibeVoice Studio - Standalone TTS">
+    xmlns:ski="using:SkiaSharp.Views.Windows"
+    Title="VibeVoice Studio Pro">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="300"/>
+            <ColumnDefinition Width="350"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Sidebar: Voice Gallery & Settings -->
-        <StackPanel Grid.Column="0" Padding="20" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,1,0">
-            <TextBlock x:Uid="VoiceSettings" Style="{StaticResource TitleTextBlockStyle}" Margin="0,0,0,20"/>
-            
-            <TextBlock x:Uid="RefAudioLabel"/>
-            <Grid ColumnSpacing="10" Margin="0,5,0,15">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBox Text="{x:Bind ViewModel.RefAudioPath, Mode=TwoWay}" PlaceholderText="Select WAV file..."/>
-                <Button Grid.Column="1" Content="Browse" Command="{x:Bind ViewModel.PickRefAudioCommand}"/>
-            </Grid>
+        <!-- Sidebar -->
+        <ScrollViewer Grid.Column="0" Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="VibeVoice Pro" FontSize="24" FontWeight="Bold"/>
+                
+                <TextBlock Text="Engine Device" FontWeight="SemiBold"/>
+                <ComboBox ItemsSource="{Binding ViewModel.InferenceDevices}" SelectedItem="{Binding ViewModel.SelectedDevice, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+                <Button Content="Initialize" Command="{Binding ViewModel.InitializeEngineCommand}" HorizontalAlignment="Stretch"/>
+                
+                <TextBlock Text="Output Device" FontWeight="SemiBold"/>
+                <ComboBox ItemsSource="{Binding ViewModel.AudioDevices}" SelectedItem="{Binding ViewModel.SelectedAudioDevice, Mode=TwoWay}" DisplayMemberPath="Name" HorizontalAlignment="Stretch"/>
 
-            <TextBlock Text="Engine Model"/>
-            <ComboBox ItemsSource="{x:Bind ViewModel.AvailableModels}"
-                      SelectedItem="{x:Bind ViewModel.SelectedModel, Mode=TwoWay}"
-                      DisplayMemberPath="Name"
-                      HorizontalAlignment="Stretch"
-                      Margin="0,5,0,15"/>
+                <TextBlock Text="User Dictionary" FontWeight="SemiBold"/>
+                <ListView ItemsSource="{Binding ViewModel.UserDictionary}" MaxHeight="100">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <TextBox Text="{Binding OriginalText, Mode=TwoWay}" Width="100"/>
+                                <TextBox Text="{Binding Reading, Mode=TwoWay}" Width="100"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+                <Button Content="Add Word" Command="{Binding ViewModel.AddUserDictCommand}" HorizontalAlignment="Stretch"/>
 
-            <TextBlock Text="Language (JA / EN)"/>
-            <ToggleSwitch x:Name="LanguageSwitch" 
-                          OnContent="English" OffContent="Japanese" 
-                          IsOn="{x:Bind ViewModel.IsEnglish, Mode=TwoWay}"
-                          Margin="0,5,0,15"/>
+                <TextBlock Text="Voice Gallery" FontWeight="SemiBold"/>
+                <ItemsControl ItemsSource="{Binding ViewModel.FilteredVoiceGallery}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <RadioButton Content="{Binding Name}" IsChecked="{Binding IsSelected, Mode=TwoWay}" GroupName="VoiceGroup"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
 
-            <TextBlock Text="Speed"/>
-            <Slider Value="{x:Bind ViewModel.Speed, Mode=TwoWay}" Minimum="0.5" Maximum="2.0" StepFrequency="0.1" Margin="0,0,0,10"/>
-            
-            <TextBlock Text="Pitch"/>
-            <Slider Value="{x:Bind ViewModel.Pitch, Mode=TwoWay}" Minimum="-12" Maximum="12" StepFrequency="1" Margin="0,0,0,10"/>
-
-            <TextBlock Text="Volume"/>
-            <Slider Value="{x:Bind ViewModel.Volume, Mode=TwoWay}" Minimum="0" Maximum="1" StepFrequency="0.1" Margin="0,0,0,15"/>
-
-            <TextBlock x:Uid="VoiceGalleryLabel" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,15,0,5"/>
-            <ListView x:Name="VoiceListView" 
-                      ItemsSource="{x:Bind ViewModel.FilteredVoiceGallery}" 
-                      SelectedItem="{x:Bind ViewModel.SelectedVoice, Mode=TwoWay}"
-                      Height="200" Margin="0,0,0,15"
-                      BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="models:VoiceModel">
-                        <StackPanel Padding="5">
-                            <TextBlock Text="{x:Bind Name}" FontWeight="Bold"/>
-                            <TextBlock Text="{x:Bind Language}" Style="{StaticResource CaptionTextBlockStyle}"/>
-                        </StackPanel>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-
-            <Button x:Uid="AddGalleryButton" Command="{x:Bind ViewModel.AddToGalleryCommand}" 
-                    HorizontalAlignment="Stretch" Style="{StaticResource AccentButtonStyle}"/>
-        </StackPanel>
-
-        <!-- Main Content: Text Input & Controls -->
-        <Grid Grid.Column="1" Padding="30">
+        <!-- Main Content -->
+        <Grid Grid.Column="1" Padding="20">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-
-            <!-- Text Input Area -->
-            <TextBox x:Name="InputTextBox" Grid.Row="0" x:Uid="InputTextHeader"
-                     Text="{x:Bind ViewModel.InputText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                     TextWrapping="Wrap" AcceptsReturn="True" 
-                     PlaceholderText="Enter text here to generate speech..."
-                     ScrollViewer.VerticalScrollBarVisibility="Auto"/>
-
-            <!-- Progress & Visualization -->
-            <StackPanel Grid.Row="1" Margin="0,20,0,0">
-                <TextBlock Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" Margin="0,0,0,5" FontWeight="SemiBold"/>
-                <ProgressBar Value="{x:Bind ViewModel.Progress, Mode=OneWay}" Height="10" Margin="0,0,0,10"/>
-                <!-- Waveform Visualizer Placeholder -->
-                <Canvas x:Name="WaveformCanvas" Height="100" Background="{ThemeResource ControlFillColorDefaultBrush}"/>
+            
+            <TextBox Text="{Binding ViewModel.InputText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap"/>
+            
+            <StackPanel Grid.Row="1" Margin="0,10">
+                <TextBlock Text="{Binding ViewModel.StatusMessage}"/>
+                <ProgressBar Value="{Binding ViewModel.Progress}" Margin="0,5"/>
+                <ski:SKXamlCanvas x:Name="WaveformCanvas" Height="100" PaintSurface="OnPaintSurface" Background="Black"/>
             </StackPanel>
-
-            <!-- Action Buttons -->
-            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="15" Margin="0,20,0,0">
-                <Button x:Name="GeneratePlayButton" x:Uid="GenerateButton"
-                        Style="{StaticResource AccentButtonStyle}" Width="150" Height="45"
-                        Command="{x:Bind ViewModel.GenerateAudioCommand}"/>
-                <Button x:Name="SaveButton" x:Uid="SaveButton"
-                        Command="{x:Bind ViewModel.SaveAudioCommand}"
-                        Width="100" Height="45"/>
+            
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                <Button Content="Batch Export" Command="{Binding ViewModel.BatchExportCommand}"/>
+                <Button Content="Stop" Command="{Binding ViewModel.StopCommand}"/>
+                <Button Content="Generate" Style="{StaticResource AccentButtonStyle}" Command="{Binding ViewModel.GenerateAudioCommand}"/>
             </StackPanel>
         </Grid>
     </Grid>
