@@ -1,0 +1,16 @@
+=== VibeVoice Studio Pro Smoke Test ===
+Testing Initialization using models at: E:\app\VibeVoiceStudio\publish_v1.1.1_final_v4\models
+
+Progress: 0%
+[FAIL] Smoke Test FAILED: [ErrorCode:NoSuchFile] Load model from E:\app\VibeVoiceStudio\publish_v1.1.1_final_v4\models\lm_prefill.onnx failed:Load model E:\app\VibeVoiceStudio\publish_v1.1.1_final_v4\models\lm_prefill.onnx failed. File doesn't exist
+   at Microsoft.ML.OnnxRuntime.InferenceSession.Init(String modelPath, SessionOptions options, PrePackedWeightsContainer prepackedWeightsContainer)
+   at Microsoft.ML.OnnxRuntime.InferenceSession..ctor(String modelPath, SessionOptions options)
+   at VibeVoiceNative.Inference.VibeVoiceOnnxEngine.LoadSession(String path, SessionOptions options) in E:\app\VibeVoiceStudio\VibeVoiceNative.Inference\VibeVoiceOnnxEngine.cs:line 114
+   at VibeVoiceNative.Inference.VibeVoiceOnnxEngine.<>c__DisplayClass15_0.<InitializeAsync>b__0() in E:\app\VibeVoiceStudio\VibeVoiceNative.Inference\VibeVoiceOnnxEngine.cs:line 80
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at VibeVoiceNative.Inference.VibeVoiceOnnxEngine.InitializeAsync(String modelDir, String device, IProgress`1 progress) in E:\app\VibeVoiceStudio\VibeVoiceNative.Inference\VibeVoiceOnnxEngine.cs:line 58
+   at VibeVoiceVerification.Program.Main(String[] args) in E:\app\VibeVoiceStudio\VerificationTest\Program.cs:line 30

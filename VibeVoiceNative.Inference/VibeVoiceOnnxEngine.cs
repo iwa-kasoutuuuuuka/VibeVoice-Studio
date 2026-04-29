@@ -48,7 +48,7 @@ namespace VibeVoiceNative.Inference
 
         public async Task InitializeAsync(string modelDir, string device, IProgress<double>? progress = null)
         {
-            _logger.Information("Initializing engine with device: {Device} (Performance Optimized)", device);
+            _logger.Information("Initializing engine with device: {Device}", device);
             _currentDevice = device;
             progress?.Report(0);
 
@@ -60,14 +60,8 @@ namespace VibeVoiceNative.Inference
                 var options = new SessionOptions
                 {
                     GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,
-                    EnableMemoryPattern = true,
-                    ExecutionMode = ExecutionMode.ORT_SEQUENTIAL
+                    EnableMemoryPattern = true
                 };
-
-                // CPU スレッド数の最適化
-                int threads = Math.Max(1, Environment.ProcessorCount / 2);
-                options.IntraOpNumThreads = threads;
-                _logger.Information("Setting IntraOpNumThreads to {Threads}", threads);
 
                 if (device == "DirectML") options.AppendExecutionProvider_DML(0);
                 else if (device == "CUDA") options.AppendExecutionProvider_CUDA(0);
@@ -77,16 +71,16 @@ namespace VibeVoiceNative.Inference
                 try
                 {
                     _textEncoder = LoadSession(Path.Combine(modelDir, "text_encoder.onnx"), options);
-                    _lmPrefill = LoadSession(Path.Combine(modelDir, "lm_prefill.onnx"), options);
-                    _lmStep = LoadSession(Path.Combine(modelDir, "lm_step.onnx"), options);
-                    _textToCond = LoadSession(Path.Combine(modelDir, "text_to_cond.onnx"), options);
+                    _lmPrefill = LoadSession(Path.Combine(modelDir, "tts_lm_prefill.onnx"), options);
+                    _lmStep = LoadSession(Path.Combine(modelDir, "tts_lm_step.onnx"), options);
+                    _textToCond = LoadSession(Path.Combine(modelDir, "text_to_condition.onnx"), options);
                     _predictionHead = LoadSession(Path.Combine(modelDir, "prediction_head.onnx"), options);
                     _vocoder = LoadSession(Path.Combine(modelDir, "acoustic_decoder.onnx"), options);
                     _acousticConnector = LoadSession(Path.Combine(modelDir, "acoustic_connector.onnx"), options);
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error(ex, "Failed to load session(s).");
+                    _logger.Error(ex, "Failed to load session(s). Check model file names.");
                     throw;
                 }
             });
@@ -102,7 +96,6 @@ namespace VibeVoiceNative.Inference
             string fileName = Path.GetFileNameWithoutExtension(path);
             string ext = Path.GetExtension(path);
 
-            // 高速化モデルの優先順位: FP16 (GPU) > Int8 > Normal
             string fp16Path = Path.Combine(dir, $"{fileName}.fp16{ext}");
             string int8Path = Path.Combine(dir, $"{fileName}.int8{ext}");
             
@@ -110,6 +103,7 @@ namespace VibeVoiceNative.Inference
             if (_currentDevice != "CPU" && File.Exists(fp16Path)) finalPath = fp16Path;
             else if (File.Exists(int8Path)) finalPath = int8Path;
 
+            if (!File.Exists(finalPath)) throw new FileNotFoundException($"Model file not found: {Path.GetFileName(finalPath)}");
             _logger.Information("Loading: {Path}", Path.GetFileName(finalPath));
             return new InferenceSession(finalPath, options);
         }
