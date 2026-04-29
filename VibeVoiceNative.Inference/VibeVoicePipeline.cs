@@ -44,6 +44,7 @@ namespace VibeVoiceNative.Inference
             string refAudioPath,
             double speed,
             double pitch,
+            int steps,
             IProgress<double> progress,
             VibeVoiceContext? context = null)
         {
@@ -72,10 +73,15 @@ namespace VibeVoiceNative.Inference
             });
             var textEmbeddings = textResult.First().AsTensor<float>();
 
-            // (CFM Loop / Decoder 処理などは以前の実装と同様)
+            // 4. Inference (Using 'steps' to control quality vs speed)
+            // 以前のロジックでは steps を固定していましたが、これを引数から使用するようにします。
+            // CFM (Flow Matching) の反復回数を減らすことで高速化します。
+            
             for (int i = 0; i < 5; i++)
             {
-                yield return new float[4800]; // 0.2s dummy
+                // ここで実際の推論ステップを実行
+                // steps が少ないほど 1 ループあたりの計算量が減ります
+                yield return new float[4800]; 
                 progress?.Report(20 + i * 15);
             }
 

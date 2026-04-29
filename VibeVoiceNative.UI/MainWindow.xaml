@@ -5,7 +5,7 @@
     xmlns:local="using:VibeVoiceNative.UI"
     xmlns:models="using:VibeVoiceNative.UI.Models"
     xmlns:ski="using:SkiaSharp.Views.Windows"
-    Title="VibeVoice Studio Pro">
+    Title="VibeVoice Studio Pro - Speed Optimized">
 
     <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.ColumnDefinitions>
@@ -18,6 +18,13 @@
             <StackPanel Spacing="15">
                 <TextBlock Text="VibeVoice Pro" FontSize="24" FontWeight="Bold"/>
                 
+                <TextBlock Text="Performance &amp; Quality" FontWeight="SemiBold"/>
+                <StackPanel Spacing="5" Padding="10" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="4">
+                    <TextBlock Text="Inference Mode (Steps)"/>
+                    <Slider Value="{Binding ViewModel.InferenceSteps, Mode=TwoWay}" Minimum="4" Maximum="50" StepFrequency="1"/>
+                    <TextBlock Text="Low steps = High Speed, High steps = High Quality" FontSize="11" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
+                </StackPanel>
+
                 <TextBlock Text="Engine Device" FontWeight="SemiBold"/>
                 <ComboBox ItemsSource="{Binding ViewModel.InferenceDevices}" SelectedItem="{Binding ViewModel.SelectedDevice, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
                 <Button Content="Initialize" Command="{Binding ViewModel.InitializeEngineCommand}" HorizontalAlignment="Stretch"/>
@@ -37,15 +44,6 @@
                     </ListView.ItemTemplate>
                 </ListView>
                 <Button Content="Add Word" Command="{Binding ViewModel.AddUserDictCommand}" HorizontalAlignment="Stretch"/>
-
-                <TextBlock Text="Voice Gallery" FontWeight="SemiBold"/>
-                <ItemsControl ItemsSource="{Binding ViewModel.FilteredVoiceGallery}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <RadioButton Content="{Binding Name}" IsChecked="{Binding IsSelected, Mode=TwoWay}" GroupName="VoiceGroup"/>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
             </StackPanel>
         </ScrollViewer>
 
@@ -57,7 +55,7 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             
-            <TextBox Text="{Binding ViewModel.InputText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap"/>
+            <TextBox Text="{Binding ViewModel.InputText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" FontSize="16" PlaceholderText="Input scripts... Use parallel batch export for maximum speed."/>
             
             <StackPanel Grid.Row="1" Margin="0,10">
                 <TextBlock Text="{Binding ViewModel.StatusMessage}"/>
@@ -66,9 +64,9 @@
             </StackPanel>
             
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
-                <Button Content="Batch Export" Command="{Binding ViewModel.BatchExportCommand}"/>
+                <Button Content="Parallel Batch Export" Command="{Binding ViewModel.BatchExportCommand}" Style="{StaticResource AccentButtonStyle}"/>
                 <Button Content="Stop" Command="{Binding ViewModel.StopCommand}"/>
-                <Button Content="Generate" Style="{StaticResource AccentButtonStyle}" Command="{Binding ViewModel.GenerateAudioCommand}"/>
+                <Button Content="Generate" Command="{Binding ViewModel.GenerateAudioCommand}"/>
             </StackPanel>
         </Grid>
     </Grid>
