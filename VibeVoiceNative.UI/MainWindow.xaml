@@ -5,40 +5,36 @@
     xmlns:local="using:VibeVoiceNative.UI"
     xmlns:models="using:VibeVoiceNative.UI.Models"
     xmlns:ski="using:SkiaSharp.Views.Windows"
-    Title="VibeVoice Studio Pro - Speed Optimized">
+    Title="VibeVoice Studio Ultimate">
 
     <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="350"/>
+            <ColumnDefinition Width="330"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
         <!-- Sidebar -->
-        <ScrollViewer Grid.Column="0" Padding="20">
-            <StackPanel Spacing="15">
-                <TextBlock Text="VibeVoice Pro" FontSize="24" FontWeight="Bold"/>
+        <ScrollViewer Grid.Column="0" Padding="15">
+            <StackPanel Spacing="12">
+                <TextBlock Text="VibeVoice Ultimate" FontSize="20" FontWeight="Bold"/>
                 
-                <TextBlock Text="Performance &amp; Quality" FontWeight="SemiBold"/>
-                <StackPanel Spacing="5" Padding="10" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="4">
-                    <TextBlock Text="Inference Mode (Steps)"/>
-                    <Slider Value="{Binding ViewModel.InferenceSteps, Mode=TwoWay}" Minimum="4" Maximum="50" StepFrequency="1"/>
-                    <TextBlock Text="Low steps = High Speed, High steps = High Quality" FontSize="11" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
-                </StackPanel>
+                <TextBlock Text="API Server" FontWeight="SemiBold"/>
+                <Button Content="Start/Stop API" Command="{Binding ViewModel.ToggleApiServerCommand}" HorizontalAlignment="Stretch"/>
+                
+                <TextBlock Text="Performance" FontWeight="SemiBold"/>
+                <Slider Value="{Binding ViewModel.InferenceSteps, Mode=TwoWay}" Minimum="4" Maximum="50"/>
 
-                <TextBlock Text="Engine Device" FontWeight="SemiBold"/>
+                <TextBlock Text="Device" FontWeight="SemiBold"/>
                 <ComboBox ItemsSource="{Binding ViewModel.InferenceDevices}" SelectedItem="{Binding ViewModel.SelectedDevice, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
                 <Button Content="Initialize" Command="{Binding ViewModel.InitializeEngineCommand}" HorizontalAlignment="Stretch"/>
-                
-                <TextBlock Text="Output Device" FontWeight="SemiBold"/>
-                <ComboBox ItemsSource="{Binding ViewModel.AudioDevices}" SelectedItem="{Binding ViewModel.SelectedAudioDevice, Mode=TwoWay}" DisplayMemberPath="Name" HorizontalAlignment="Stretch"/>
 
-                <TextBlock Text="User Dictionary" FontWeight="SemiBold"/>
-                <ListView ItemsSource="{Binding ViewModel.UserDictionary}" MaxHeight="100">
+                <TextBlock Text="User Dict" FontWeight="SemiBold"/>
+                <ListView ItemsSource="{Binding ViewModel.UserDictionary}" MaxHeight="80">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" Spacing="5">
-                                <TextBox Text="{Binding OriginalText, Mode=TwoWay}" Width="100"/>
-                                <TextBox Text="{Binding Reading, Mode=TwoWay}" Width="100"/>
+                                <TextBox Text="{Binding OriginalText, Mode=TwoWay}" Width="80"/>
+                                <TextBox Text="{Binding Reading, Mode=TwoWay}" Width="80"/>
                             </StackPanel>
                         </DataTemplate>
                     </ListView.ItemTemplate>
@@ -55,7 +51,9 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             
-            <TextBox Text="{Binding ViewModel.InputText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" FontSize="16" PlaceholderText="Input scripts... Use parallel batch export for maximum speed."/>
+            <TextBox Text="{Binding ViewModel.InputText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                     AcceptsReturn="True" TextWrapping="Wrap" FontSize="16" 
+                     PlaceholderText="[Speaker] Hello!"/>
             
             <StackPanel Grid.Row="1" Margin="0,10">
                 <TextBlock Text="{Binding ViewModel.StatusMessage}"/>
@@ -64,7 +62,7 @@
             </StackPanel>
             
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
-                <Button Content="Parallel Batch Export" Command="{Binding ViewModel.BatchExportCommand}" Style="{StaticResource AccentButtonStyle}"/>
+                <Button Content="Batch Script" Command="{Binding ViewModel.BatchExportCommand}" Style="{StaticResource AccentButtonStyle}"/>
                 <Button Content="Stop" Command="{Binding ViewModel.StopCommand}"/>
                 <Button Content="Generate" Command="{Binding ViewModel.GenerateAudioCommand}"/>
             </StackPanel>
