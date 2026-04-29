@@ -78,7 +78,7 @@ namespace VibeVoiceNative.UI.ViewModels
         private void SetupAudioDevices()
         {
             AudioDevices.Clear();
-            foreach (var d in AudioPlayer.GetDevices()) AudioDevices.Add(new AudioDevice { Id = d.id, Name = d.name });
+            foreach (var d in VibeVoiceNative.UI.Audio.AudioPlayer.GetDevices()) AudioDevices.Add(new AudioDevice { Id = d.id, Name = d.name });
             if (AudioDevices.Count > 0) SelectedAudioDevice = AudioDevices[0];
         }
 
