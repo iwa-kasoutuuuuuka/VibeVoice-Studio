@@ -1,49 +1,32 @@
-# VibeVoice Studio (Standalone C# TTS)
+# VibeVoice Studio Ultimate
 
-<p align="center">
-  <img src="VibeVoiceNative.UI/Assets/AppIcon.png" width="200" height="200" alt="VibeVoice App Icon">
-</p>
+VibeVoice Studio Ultimate は、最先端の AI 音声合成エンジン「VibeVoice」を最大限に活用するための、プロフェッショナル向けデスクトップアプリケーションです。
 
-[![Windows 11](https://img.shields.io/badge/OS-Windows%2011-blue)](https://www.microsoft.com/windows)
-[![.NET 8.0](https://img.shields.io/badge/.NET-8.0-purple)](https://dotnet.microsoft.com/download)
-[![ONNX Runtime](https://img.shields.io/badge/Inference-ONNX%20Runtime-green)](https://onnxruntime.ai/)
+## 概要
+わずか数秒のリファレンス音声から、その話者の特徴（声質、イントネーション）を捉えた高品質な音声を生成する「Zero-shot TTS」を実現します。さらに、ライブ配信、動画制作、外部ツール連携に特化した究極の機能を備えています。
 
-## 日本語 (Japanese)
+## 主な機能
+- **超高速推論**: CPU、DirectML (AMD/Intel GPU)、CUDA (NVIDIA GPU) に対応。FP16 最適化による爆速生成。
+- **リアルタイム・スペクトログラム**: 生成中の音声を周波数分布として可視化するモダンな UI。
+- **台本形式の一括書き出し**: `[話者名] セリフ` 形式のテキストを解析し、自動で話者を切り替えて並列生成。
+- **外部連携 API サーバー**: HTTP/REST 経由で他のアプリから音声合成を呼び出し可能（デフォルト: 5050ポート）。
+- **ユーザー辞書機能**: 固有名詞や特殊な読みを自由に登録・管理。
+- **インテリジェント音声前処理**: 無音カット、ノーマライズを自動適用し、常に最高の品質で出力。
 
-### 概要
-VibeVoice Studio は、Microsoft の VibeVoice モデルをベースにした、高性能でポータブルな Windows 11 ネイティブ TTS（音声合成）アプリケーションです。Python ランタイムを一切必要とせず、C# と ONNX Runtime のみで動作するように設計されています。
+## セットアップ
+1. **モデルの配置**: `models/` フォルダに VibeVoice ONNX モデル群（v4推奨）を配置してください。
+   - 公式モデル配布先: [Hugging Face - iwa-kasoutuuuuuka/VibeVoice](https://huggingface.co/iwa-kasoutuuuuuka/VibeVoice)
+2. **辞書の配置**: `dic/` フォルダに MeCab 用の辞書（ipadic 等）を配置してください。
+3. **実行**: `publish/VibeVoiceStudio.bat` を実行して起動します。
 
-### 最新のアップデート (v1.1.0)
-- **究極の高速化**: TensorRT および CUDA をサポート。NVIDIA GPU 環境で圧倒的な推論速度を実現。
-- **FP16 量子化**: VRAM 消費を抑えつつ、処理能力を向上。
-- **ポータブル設計**: 依存関係をすべて内包した「自己完結型」バイナリ。
+## 公式リンク
+- **Model Repository**: [iwa-kasoutuuuuuka/VibeVoice](https://huggingface.co/iwa-kasoutuuuuuka/VibeVoice)
+- **Developer**: [iwa-kasoutuuuuuka](https://github.com/iwa-kasoutuuuuuka)
 
-### セットアップ
-1. 本リポジトリからポータブル版をダウンロードするか、`dotnet publish` でビルドします。
-2. `VibeVoiceStudio.exe` を実行すると、必要なモデルのダウンロードが自動開始されます。
+## 動作環境
+- OS: Windows 10/11 (x64)
+- Runtime: .NET 8.0
+- GPU 推奨: DirectX 12 互換 (DirectML) または NVIDIA GPU (CUDA)
 
 ---
-
-## English (English)
-
-### Latest Updates (v1.1.0)
-- **Ultimate Speed**: Support for TensorRT and CUDA. Unmatched inference speed on NVIDIA GPUs.
-- **FP16 Quantization**: Faster processing with reduced VRAM footprint.
-- **Portable Design**: "Self-contained" binary with all dependencies included.
-
-### Setup
-1. Download the portable version or build using `dotnet publish`.
-2. Run `VibeVoiceStudio.exe`, and the models will be downloaded automatically.
-
-## ✨ Features
-- **Complete C# Native Inference Pipeline:** Uses `Microsoft.ML.OnnxRuntime` for true zero-shot TTS inference without Python dependencies.
-- **Integrated Tokenizer:** Uses `Tokenizers.DotNet` to natively load Hugging Face `tokenizer.json` for Qwen2 BPE tokenization.
-- **Native Audio Processing:** Implements real-time WAV resampling and 80-bin Mel Spectrogram extraction using `NAudio` and `MathNet.Numerics`.
-- **Advanced Diffusion Solver:** Includes a native C# implementation of the Euler ODE solver loop for Flow Matching acoustic generation.
-- **Automated Model Management:** Automatically downloads required ONNX files (including split `.data` weights) from Hugging Face on first launch with UI freeze protection.
-
-## 📦 Download
-Check the `publish_v1.1.0_new` directory for the fully self-contained portable Windows executable.
-
-## License & Disclaimer
-This project is for research and personal use only. Please respect the "Responsible AI" guidelines and ethical considerations regarding voice cloning.
+© 2026 VibeVoice Studio Project. Powered by VibeVoice Engine.
