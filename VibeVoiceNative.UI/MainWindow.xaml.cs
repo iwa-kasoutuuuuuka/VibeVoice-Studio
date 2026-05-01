@@ -9,28 +9,31 @@ using SkiaSharp.Views.Windows;
 using System.Linq;
 using Microsoft.UI.Dispatching;
 using System.Collections.Generic;
+#nullable enable
 
 namespace VibeVoiceNative.UI
 {
     public sealed partial class MainWindow : Window
     {
         public MainViewModel ViewModel { get; } = new MainViewModel();
-        private DispatcherQueueTimer _renderTimer;
+        private DispatcherQueueTimer? _renderTimer;
         private List<float[]> _spectrogramData = new();
         private const int MaxSpectrogramColumns = 100;
 
         public MainWindow()
         {
             this.InitializeComponent();
-            this.RootGrid.DataContext = this;
             this.Activated += MainWindow_Activated;
             
             SetupPickers();
 
             _renderTimer = this.DispatcherQueue.CreateTimer();
-            _renderTimer.Interval = TimeSpan.FromMilliseconds(33); // ~30fps
-            _renderTimer.Tick += (s, e) => WaveformCanvas.Invalidate();
-            _renderTimer.Start();
+            if (_renderTimer != null)
+            {
+                _renderTimer.Interval = TimeSpan.FromMilliseconds(33); // ~30fps
+                _renderTimer.Tick += (s, e) => WaveformCanvas.Invalidate();
+                _renderTimer.Start();
+            }
         }
 
         private void SetupPickers()

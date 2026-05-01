@@ -35,9 +35,11 @@ namespace VibeVoiceNative.Inference
 
         public VibeVoiceOnnxEngine()
         {
-            if (!Directory.Exists("logs")) Directory.CreateDirectory("logs");
+            string? baseDir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
+            string logDir = Path.Combine(baseDir, "logs");
+            if (!Directory.Exists(logDir)) Directory.CreateDirectory(logDir);
             _logger = new LoggerConfiguration()
-                .WriteTo.File("logs/engine_.log", rollingInterval: RollingInterval.Day)
+                .WriteTo.File(Path.Combine(logDir, "engine_.log"), rollingInterval: RollingInterval.Day)
                 .CreateLogger();
         }
 
@@ -63,8 +65,32 @@ namespace VibeVoiceNative.Inference
                     EnableMemoryPattern = true
                 };
 
-                if (device == "DirectML") options.AppendExecutionProvider_DML(0);
-                else if (device == "CUDA") options.AppendExecutionProvider_CUDA(0);
+                if (device == "DirectML")
+                {
+                    try
+                    {
+                        options.AppendExecutionProvider_DML(0);
+                        _logger.Information("DirectML execution provider added successfully.");
+                    }
+                    catch (Exception dmlEx)
+                    {
+                        // DirectML が利用不可の場合は CPU にフォールバック
+                        _logger.Warning(dmlEx, "DirectML not available, falling back to CPU.");
+                        _currentDevice = "CPU";
+                    }
+                }
+                else if (device == "CUDA")
+                {
+                    try
+                    {
+                        options.AppendExecutionProvider_CUDA(0);
+                    }
+                    catch (Exception cudaEx)
+                    {
+                        _logger.Warning(cudaEx, "CUDA not available, falling back to CPU.");
+                        _currentDevice = "CPU";
+                    }
+                }
 
                 _textProcessor = new Text.VibeVoiceTextProcessor(modelDir);
 

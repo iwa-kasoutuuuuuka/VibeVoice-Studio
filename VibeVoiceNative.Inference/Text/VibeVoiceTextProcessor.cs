@@ -20,7 +20,7 @@ namespace VibeVoiceNative.Inference.Text
 
         public VibeVoiceTextProcessor(string? modelDir = null)
         {
-            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            string? baseDir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
             string tokenizerPath = Path.Combine(modelDir ?? Path.Combine(baseDir, "models"), "tokenizer.json");
             
             if (File.Exists(tokenizerPath)) 
@@ -30,11 +30,20 @@ namespace VibeVoiceNative.Inference.Text
 
             try
             {
-                string[] possibleDicPaths = {
-                    Path.Combine(baseDir, "models", "dic", "ipadic"),
-                    Path.Combine(baseDir, "dic"),
-                    Path.Combine(baseDir, "..", "dic")
+                string? exeDir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
+                string? parentDir = Path.GetDirectoryName(exeDir);
+
+                var possibleDicPaths = new List<string> {
+                    Path.Combine(modelDir ?? "", "dic", "ipadic"),
+                    Path.Combine(exeDir, "dic"),
+                    Path.Combine(exeDir, "models", "dic", "ipadic")
                 };
+                
+                if (parentDir != null)
+                {
+                    possibleDicPaths.Add(Path.Combine(parentDir, "dic"));
+                    possibleDicPaths.Add(Path.Combine(parentDir, "models", "dic", "ipadic"));
+                }
 
                 string? dicPath = possibleDicPaths.FirstOrDefault(Directory.Exists);
                 if (dicPath != null)

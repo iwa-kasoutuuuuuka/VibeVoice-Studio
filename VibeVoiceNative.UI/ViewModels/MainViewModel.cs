@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -20,7 +21,7 @@ namespace VibeVoiceNative.UI.ViewModels
 {
     public partial class MainViewModel : ObservableObject, IDisposable
     {
-        [ObservableProperty] public partial string StatusMessage { get; set; } = "Ready";
+        [ObservableProperty] public partial string StatusMessage { get; set; } = "Ready / 準備完了";
         [ObservableProperty] public partial double Progress { get; set; }
         [ObservableProperty] public partial bool IsEngineReady { get; set; }
         [ObservableProperty] public partial string RefAudioPath { get; set; } = string.Empty;
@@ -69,7 +70,12 @@ namespace VibeVoiceNative.UI.ViewModels
             _apiServer = new VibeVoiceApiServer(ApiGenerateCallback);
             _downloadManager = new ModelDownloadManager();
             
-            _logger = new LoggerConfiguration().WriteTo.File("logs/ui_.log").CreateLogger();
+            string? baseDir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
+            string logDir = Path.Combine(baseDir, "logs");
+            if (!Directory.Exists(logDir)) Directory.CreateDirectory(logDir);
+            _logger = new LoggerConfiguration()
+                .WriteTo.File(Path.Combine(logDir, "ui_.log"), rollingInterval: RollingInterval.Day)
+                .CreateLogger();
             
             SetupAudioDevices();
             InferenceSteps = 16;
@@ -80,6 +86,14 @@ namespace VibeVoiceNative.UI.ViewModels
             AudioDevices.Clear();
             foreach (var d in VibeVoiceNative.UI.Audio.AudioPlayer.GetDevices()) AudioDevices.Add(new AudioDevice { Id = d.id, Name = d.name });
             if (AudioDevices.Count > 0) SelectedAudioDevice = AudioDevices[0];
+        }
+
+        [RelayCommand]
+        public void SetLanguage(string langCode)
+        {
+            IsEnglish = (langCode == "EN");
+            StatusMessage = IsEnglish ? "Language switched to English" : "言語を日本語に切り替えました";
+            _logger.Information("Language mode changed: {Lang}", langCode);
         }
 
         private async Task<float[]> ApiGenerateCallback(string text, string voiceName)
@@ -98,17 +112,37 @@ namespace VibeVoiceNative.UI.ViewModels
         [RelayCommand]
         public void ToggleApiServer()
         {
-            if (IsApiServerRunning) { _apiServer.Stop(); IsApiServerRunning = false; StatusMessage = "API Server Stopped"; }
-            else { _apiServer.Start(); IsApiServerRunning = true; StatusMessage = "API Server Running at :5050"; }
+            if (IsApiServerRunning) { _apiServer.Stop(); IsApiServerRunning = false; StatusMessage = "API Server Stopped / APIサーバー停止"; }
+            else { _apiServer.Start(); IsApiServerRunning = true; StatusMessage = "API Server Running at :5050 / サーバー起動中"; }
         }
 
         [RelayCommand]
         public async Task InitializeEngine()
         {
-            StatusMessage = "Loading Engine...";
-            await _engine.InitializeAsync(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "models"), SelectedDevice);
-            IsEngineReady = true;
-            StatusMessage = "Engine Ready";
+            try {
+                IsEngineReady = false;
+                StatusMessage = "Loading Engine... / エンジン起動中...";
+                string? exeDir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
+                string modelDir = Path.Combine(exeDir, "models");
+                
+                // bin フォルダに入っている場合、一つ上の階層も確認
+                if (!Directory.Exists(modelDir))
+                {
+                    string? parentDir = Path.GetDirectoryName(exeDir);
+                    if (parentDir != null)
+                    {
+                        string altModelDir = Path.Combine(parentDir, "models");
+                        if (Directory.Exists(altModelDir)) modelDir = altModelDir;
+                    }
+                }
+
+                await _engine.InitializeAsync(modelDir, SelectedDevice);
+                IsEngineReady = true;
+                StatusMessage = "Engine Ready / 準備完了";
+            } catch (Exception ex) {
+                _logger.Error(ex, "Init error");
+                StatusMessage = "Init Error / 初期化失敗";
+            }
         }
 
         [RelayCommand]
@@ -119,12 +153,11 @@ namespace VibeVoiceNative.UI.ViewModels
 
             try {
                 IsGenerating = true;
-                StatusMessage = "Generating...";
+                StatusMessage = "Generating... / 音声生成中...";
                 var allAudio = new List<float>();
                 _player.Stop();
                 _player.Play(SelectedAudioDevice?.Id);
 
-                // 台本形式解析
                 var sentences = ParseScript(InputText);
                 var context = new VibeVoiceContext();
 
@@ -132,14 +165,18 @@ namespace VibeVoiceNative.UI.ViewModels
                     if (!IsGenerating) break;
                     string targetVoice = voicePath ?? RefAudioPath;
                     await foreach (var chunk in _engine.GenerateAudioStreamingAsync(text, targetVoice, Speed, Pitch, InferenceSteps, new Progress<double>(), context)) {
+                        if (!IsGenerating) break;
                         _player.AddSamples(chunk);
                         allAudio.AddRange(chunk);
                         CurrentAudioBuffer = chunk;
                     }
                 }
                 _lastGeneratedAudio = AudioPreProcessor.CleanAndNormalize(allAudio.ToArray());
-                StatusMessage = "Complete";
-            } finally { IsGenerating = false; }
+                StatusMessage = "Complete / 生成完了";
+            } catch (Exception ex) {
+                _logger.Error(ex, "Gen error");
+                StatusMessage = "Gen Error / 生成失敗";
+            } finally { IsGenerating = false; Progress = 100; }
         }
 
         private List<(string text, string? voicePath)> ParseScript(string script)
@@ -184,24 +221,28 @@ namespace VibeVoiceNative.UI.ViewModels
                     var allAudio = new List<float>();
                     string voice = item.voicePath ?? RefAudioPath;
                     await foreach (var chunk in _engine.GenerateAudioStreamingAsync(item.text, voice, Speed, Pitch, InferenceSteps, new Progress<double>())) {
+                        if (!IsGenerating) break;
                         allAudio.AddRange(chunk);
                     }
                     string path = Path.Combine(folder, $"{item.index + 1:D3}_{item.text.Substring(0, Math.Min(5, item.text.Length))}.wav");
                     VibeVoiceNative.Inference.Audio.AudioExporter.SaveAsWav(path, AudioPreProcessor.CleanAndNormalize(allAudio.ToArray()), 24000);
                     
                     Interlocked.Increment(ref completed);
-                    StatusMessage = $"Batch: {completed}/{script.Count}";
+                    StatusMessage = $"Batch: {completed}/{script.Count} / 書き出し中...";
                     Progress = (double)completed / script.Count * 100;
                 });
 
-                StatusMessage = "Batch Complete";
-            } finally { IsGenerating = false; }
+                StatusMessage = "Batch Complete / 一括生成完了";
+            } catch (Exception ex) {
+                _logger.Error(ex, "Batch error");
+                StatusMessage = "Batch Error / 一括生成失敗";
+            } finally { IsGenerating = false; Progress = 100; }
         }
 
         [RelayCommand] public void Stop() { _engine.Stop(); _player.Stop(); IsGenerating = false; }
-        [RelayCommand] public async Task SaveAudio() { /* Implementation same as before */ }
-        [RelayCommand] public void AddUserDict(string original) { /* Same */ }
-        [RelayCommand] public void RemoveUserDict(UserDictionaryEntry entry) { /* Same */ }
+        [RelayCommand] public async Task SaveAudio() { if (_lastGeneratedAudio != null && PickSaveFileAsync != null) { var path = await PickSaveFileAsync(); if (!string.IsNullOrEmpty(path)) VibeVoiceNative.Inference.Audio.AudioExporter.SaveAsWav(path, _lastGeneratedAudio, 24000); } }
+        [RelayCommand] public void AddUserDict(string original) { if (!string.IsNullOrWhiteSpace(original)) UserDictionary.Add(new UserDictionaryEntry { OriginalText = original }); }
+        [RelayCommand] public void RemoveUserDict(UserDictionaryEntry entry) { UserDictionary.Remove(entry); }
 
         public void Dispose() { _apiServer.Stop(); _player?.Dispose(); (_engine as IDisposable)?.Dispose(); }
     }

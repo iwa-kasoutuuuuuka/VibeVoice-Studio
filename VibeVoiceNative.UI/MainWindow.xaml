@@ -5,11 +5,11 @@
     xmlns:local="using:VibeVoiceNative.UI"
     xmlns:models="using:VibeVoiceNative.UI.Models"
     xmlns:ski="using:SkiaSharp.Views.Windows"
-    Title="VibeVoice Studio Ultimate">
+    Title="VibeVoice Studio Ultimate (日本語 / English)">
 
     <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="330"/>
+            <ColumnDefinition Width="340"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
@@ -18,28 +18,37 @@
             <StackPanel Spacing="12">
                 <TextBlock Text="VibeVoice Ultimate" FontSize="20" FontWeight="Bold"/>
                 
-                <TextBlock Text="API Server" FontWeight="SemiBold"/>
-                <Button Content="Start/Stop API" Command="{Binding ViewModel.ToggleApiServerCommand}" HorizontalAlignment="Stretch"/>
+                <TextBlock Text="言語設定 / Language" FontWeight="SemiBold"/>
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button Content="日本語 / JP" Command="{x:Bind ViewModel.SetLanguageCommand}" CommandParameter="JP" HorizontalAlignment="Stretch" Width="145"/>
+                    <Button Content="English / EN" Command="{x:Bind ViewModel.SetLanguageCommand}" CommandParameter="EN" HorizontalAlignment="Stretch" Width="145"/>
+                </StackPanel>
+
+                <TextBlock Text="API サーバー / API Server" FontWeight="SemiBold"/>
+                <Button Content="起動・停止 / Start or Stop API" Command="{x:Bind ViewModel.ToggleApiServerCommand}" HorizontalAlignment="Stretch"/>
                 
-                <TextBlock Text="Performance" FontWeight="SemiBold"/>
-                <Slider Value="{Binding ViewModel.InferenceSteps, Mode=TwoWay}" Minimum="4" Maximum="50"/>
+                <TextBlock Text="推論設定 / Performance" FontWeight="SemiBold"/>
+                <StackPanel Spacing="2">
+                    <TextBlock Text="推論ステップ数 / Inference Steps" FontSize="12"/>
+                    <Slider Value="{x:Bind ViewModel.InferenceSteps, Mode=TwoWay}" Minimum="4" Maximum="50"/>
+                </StackPanel>
 
-                <TextBlock Text="Device" FontWeight="SemiBold"/>
-                <ComboBox ItemsSource="{Binding ViewModel.InferenceDevices}" SelectedItem="{Binding ViewModel.SelectedDevice, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
-                <Button Content="Initialize" Command="{Binding ViewModel.InitializeEngineCommand}" HorizontalAlignment="Stretch"/>
+                <TextBlock Text="デバイス選択 / Device" FontWeight="SemiBold"/>
+                <ComboBox ItemsSource="{x:Bind ViewModel.InferenceDevices}" SelectedItem="{x:Bind ViewModel.SelectedDevice, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+                <Button Content="エンジン初期化 / Initialize Engine" Command="{x:Bind ViewModel.InitializeEngineCommand}" HorizontalAlignment="Stretch"/>
 
-                <TextBlock Text="User Dict" FontWeight="SemiBold"/>
-                <ListView ItemsSource="{Binding ViewModel.UserDictionary}" MaxHeight="80">
+                <TextBlock Text="ユーザー辞書 / User Dictionary" FontWeight="SemiBold"/>
+                <ListView ItemsSource="{x:Bind ViewModel.UserDictionary}" MaxHeight="80">
                     <ListView.ItemTemplate>
-                        <DataTemplate>
+                        <DataTemplate x:DataType="models:UserDictionaryEntry">
                             <StackPanel Orientation="Horizontal" Spacing="5">
-                                <TextBox Text="{Binding OriginalText, Mode=TwoWay}" Width="80"/>
-                                <TextBox Text="{Binding Reading, Mode=TwoWay}" Width="80"/>
+                                <TextBox Text="{x:Bind OriginalText, Mode=TwoWay}" PlaceholderText="単語 / Word" Width="140"/>
+                                <TextBox Text="{x:Bind Reading, Mode=TwoWay}" PlaceholderText="読み / Reading" Width="140"/>
                             </StackPanel>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
-                <Button Content="Add Word" Command="{Binding ViewModel.AddUserDictCommand}" HorizontalAlignment="Stretch"/>
+                <Button Content="単語追加 / Add Word" Command="{x:Bind ViewModel.AddUserDictCommand}" HorizontalAlignment="Stretch"/>
             </StackPanel>
         </ScrollViewer>
 
@@ -51,20 +60,20 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             
-            <TextBox Text="{Binding ViewModel.InputText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+            <TextBox Text="{x:Bind ViewModel.InputText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                      AcceptsReturn="True" TextWrapping="Wrap" FontSize="16" 
-                     PlaceholderText="[Speaker] Hello!"/>
+                     PlaceholderText="台本を入力してください / Enter your script... [Speaker] Hello!"/>
             
             <StackPanel Grid.Row="1" Margin="0,10">
-                <TextBlock Text="{Binding ViewModel.StatusMessage}"/>
-                <ProgressBar Value="{Binding ViewModel.Progress}" Margin="0,5"/>
+                <TextBlock Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" FontWeight="Bold"/>
+                <ProgressBar Value="{x:Bind ViewModel.Progress, Mode=OneWay}" Margin="0,5"/>
                 <ski:SKXamlCanvas x:Name="WaveformCanvas" Height="100" PaintSurface="OnPaintSurface" Background="Black"/>
             </StackPanel>
             
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
-                <Button Content="Batch Script" Command="{Binding ViewModel.BatchExportCommand}" Style="{StaticResource AccentButtonStyle}"/>
-                <Button Content="Stop" Command="{Binding ViewModel.StopCommand}"/>
-                <Button Content="Generate" Command="{Binding ViewModel.GenerateAudioCommand}"/>
+                <Button Content="一括書き出し / Batch Script" Command="{x:Bind ViewModel.BatchExportCommand}" Style="{StaticResource AccentButtonStyle}"/>
+                <Button Content="停止 / Stop" Command="{x:Bind ViewModel.StopCommand}"/>
+                <Button Content="音声生成 / Generate" Command="{x:Bind ViewModel.GenerateAudioCommand}" Width="150"/>
             </StackPanel>
         </Grid>
     </Grid>

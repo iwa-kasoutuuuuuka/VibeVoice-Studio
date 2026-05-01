@@ -19,11 +19,9 @@ if (Test-Path $dicSource) {
 }
 
 # 起動用ランチャー (バッチファイル) の作成
-$launcher = @"
-@echo off
-start "" "%~dp0bin\VibeVoiceNative.UI.exe"
-"@
-$launcher | Out-File -FilePath "$publishDir\VibeVoiceStudio.bat" -Encoding ascii
+# カレントディレクトリを bin\ に設定してから起動（ネイティブDLL探索パス解決のため）
+$launcherContent = "@echo off`r`ncd /d `"%~dp0bin`"`r`nstart `"`" `"VibeVoiceNative.UI.exe`"`r`n"
+[System.IO.File]::WriteAllText("$publishDir\VibeVoiceStudio.bat", $launcherContent, [System.Text.Encoding]::ASCII)
 
 Write-Host "Publish complete! Output at: $publishDir" -ForegroundColor Green
 Write-Host "To run: Execute VibeVoiceStudio.bat"
