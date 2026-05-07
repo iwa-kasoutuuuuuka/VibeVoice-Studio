@@ -1,30 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-  <data name="AppTitle" xml:space="preserve">
-    <value>VibeVoice Studio - スタンドアロン音声合成</value>
+  <data name="LanguageSettingsHeader.Text" xml:space="preserve">
+    <value>言語設定</value>
   </data>
-  <data name="VoiceSettings.Text" xml:space="preserve">
-    <value>ボイス設定</value>
+  <data name="ApiServerHeader.Text" xml:space="preserve">
+    <value>API サーバー</value>
   </data>
-  <data name="RefAudioLabel.Text" xml:space="preserve">
-    <value>参照音声 (.wav)</value>
+  <data name="ToggleApiButton.Content" xml:space="preserve">
+    <value>API 起動・停止</value>
   </data>
-  <data name="LanguageLabel.Text" xml:space="preserve">
-    <value>言語</value>
+  <data name="PerformanceHeader.Text" xml:space="preserve">
+    <value>パフォーマンス設定</value>
   </data>
-  <data name="VoiceGalleryLabel.Text" xml:space="preserve">
-    <value>ボイスギャラリー</value>
+  <data name="InferenceStepsLabel.Text" xml:space="preserve">
+    <value>推論ステップ数</value>
   </data>
-  <data name="InputTextHeader.Header" xml:space="preserve">
-    <value>入力テキスト</value>
+  <data name="DeviceHeader.Text" xml:space="preserve">
+    <value>推論デバイス</value>
   </data>
-  <data name="GenerateButton.Content" xml:space="preserve">
-    <value>生成 ＆ 再生</value>
+  <data name="InitEngineButton.Content" xml:space="preserve">
+    <value>エンジン初期化</value>
   </data>
-  <data name="SaveButton.Content" xml:space="preserve">
-    <value>WAV 保存</value>
+  <data name="UserDictHeader.Text" xml:space="preserve">
+    <value>ユーザー辞書</value>
   </data>
-  <data name="AddGalleryButton.Content" xml:space="preserve">
-    <value>ギャラリーに追加</value>
+  <data name="AddWordButton.Content" xml:space="preserve">
+    <value>単語追加</value>
+  </data>
+  <data name="InputPlaceholder" xml:space="preserve">
+    <value>台本を入力してください... 例: [Speaker1] こんにちは！</value>
+  </data>
+  <data name="BatchExportButton.Content" xml:space="preserve">
+    <value>一括書き出し</value>
+  </data>
+  <data name="StopButton.Content" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="StatusReady" xml:space="preserve">
+    <value>準備完了</value>
+  </data>
+  <data name="StatusLoading" xml:space="preserve">
+    <value>エンジン起動中...</value>
+  </data>
+  <data name="StatusGenerating" xml:space="preserve">
+    <value>音声生成中...</value>
+  </data>
+  <data name="StatusComplete" xml:space="preserve">
+    <value>完了</value>
+  </data>
+  <data name="StatusError" xml:space="preserve">
+    <value>エラーが発生しました</value>
   </data>
 </root>

@@ -1,30 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-  <data name="AppTitle" xml:space="preserve">
-    <value>VibeVoice Studio - Standalone TTS</value>
+  <data name="LanguageSettingsHeader.Text" xml:space="preserve">
+    <value>Language Settings</value>
   </data>
-  <data name="VoiceSettings.Text" xml:space="preserve">
-    <value>Voice Settings</value>
+  <data name="ApiServerHeader.Text" xml:space="preserve">
+    <value>API Server</value>
   </data>
-  <data name="RefAudioLabel.Text" xml:space="preserve">
-    <value>Reference Audio (.wav)</value>
+  <data name="ToggleApiButton.Content" xml:space="preserve">
+    <value>Start / Stop API</value>
   </data>
-  <data name="LanguageLabel.Text" xml:space="preserve">
-    <value>Language</value>
+  <data name="PerformanceHeader.Text" xml:space="preserve">
+    <value>Performance Settings</value>
   </data>
-  <data name="VoiceGalleryLabel.Text" xml:space="preserve">
-    <value>Voice Gallery</value>
+  <data name="InferenceStepsLabel.Text" xml:space="preserve">
+    <value>Inference Steps</value>
   </data>
-  <data name="InputTextHeader.Header" xml:space="preserve">
-    <value>Input Text</value>
+  <data name="DeviceHeader.Text" xml:space="preserve">
+    <value>Inference Device</value>
   </data>
-  <data name="GenerateButton.Content" xml:space="preserve">
-    <value>Generate &amp; Play</value>
+  <data name="InitEngineButton.Content" xml:space="preserve">
+    <value>Initialize Engine</value>
   </data>
-  <data name="SaveButton.Content" xml:space="preserve">
-    <value>Save WAV</value>
+  <data name="UserDictHeader.Text" xml:space="preserve">
+    <value>User Dictionary</value>
   </data>
-  <data name="AddGalleryButton.Content" xml:space="preserve">
-    <value>Add to Gallery</value>
+  <data name="AddWordButton.Content" xml:space="preserve">
+    <value>Add Word</value>
+  </data>
+  <data name="InputPlaceholder" xml:space="preserve">
+    <value>Enter your script... e.g., [Speaker1] Hello!</value>
+  </data>
+  <data name="BatchExportButton.Content" xml:space="preserve">
+    <value>Batch Export</value>
+  </data>
+  <data name="StopButton.Content" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="StatusReady" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="StatusLoading" xml:space="preserve">
+    <value>Loading Engine...</value>
+  </data>
+  <data name="StatusGenerating" xml:space="preserve">
+    <value>Generating Audio...</value>
+  </data>
+  <data name="StatusComplete" xml:space="preserve">
+    <value>Complete</value>
+  </data>
+  <data name="StatusError" xml:space="preserve">
+    <value>Error occurred</value>
   </data>
 </root>

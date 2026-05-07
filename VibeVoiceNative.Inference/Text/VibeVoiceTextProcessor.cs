@@ -25,7 +25,8 @@ namespace VibeVoiceNative.Inference.Text
             
             if (File.Exists(tokenizerPath)) 
             {
-                try { _tokenizer = new Tokenizer(tokenizerPath); } catch { }
+                try { _tokenizer = new Tokenizer(tokenizerPath); } 
+                catch (Exception ex) { Console.WriteLine($"[DEBUG] Tokenizer init failed: {ex.Message}"); }
             }
 
             try
@@ -50,7 +51,7 @@ namespace VibeVoiceNative.Inference.Text
                 {
                     _mecab = MeCabTagger.Create(new MeCabParam { DicDir = dicPath });
                 }
-            } catch { }
+            } catch (Exception ex) { Console.WriteLine($"[DEBUG] MeCab init failed: {ex.Message}"); }
         }
 
         public long[] TextToTokens(string text, string language)
@@ -117,7 +118,11 @@ namespace VibeVoiceNative.Inference.Text
                     }
                 }
             }
-            catch { return text; }
+            catch (Exception ex) 
+            { 
+                Console.WriteLine($"[DEBUG] MeCab Parse failed: {ex.Message}");
+                return text; 
+            }
 
             return string.Join("", readings);
         }

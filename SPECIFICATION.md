@@ -6,8 +6,9 @@ VibeVoice Studio Ultimate は、C# / WinUI 3 をベースとしたデスクト�
 ### 構成コンポーネント
 - **UI 層 (WinUI 3)**: モダンな Fluent Design を採用したユーザーインターフェース。
 - **推論層 (Inference Engine)**: ONNX Runtime によるマルチデバイス（CPU/GPU）推論。
-- **NLP 層 (Text Processing)**: MeCab および G2P (Grapheme-to-Phoneme) によるテキスト解析とアクセント推定。
+- **NLP 層 (Text Processing)**: MeCab および Tokenizers.DotNet による高度なテキスト解析。
 - **API 層 (REST Server)**: 外部連携用の軽量 HTTP サーバー。
+- **ローカライズ層**: Resources.resw による日本語/英語の動的切り替え。
 
 ## 2. 推論エンジン仕様
 ### 対応モデル: VibeVoice-0.5B-v4 (ONNX)
@@ -23,6 +24,7 @@ VibeVoice Studio Ultimate は、C# / WinUI 3 をベースとしたデスクト�
 ### 高速化技術
 - **FP16 推論**: GPU 使用時に半精度モデルを優先利用。
 - **Parallel Generation**: バッチ処理時の複数文同時生成。
+- **Streaming Support**: 生成された音声チャンクを逐次再生し、初動レイテンシを最小化。
 - **CFM Steps Adjustment**: 4〜50ステップの範囲で品質と速度を調整可能。
 
 ## 3. 外部連携 API (REST)
@@ -55,4 +57,4 @@ VibeVoiceStudio/
 - **Serilog**: 構造化ログ
 
 ---
-仕様書最終更新日: 2026年4月30日
+仕様書最終更新日: 2026年5月7日

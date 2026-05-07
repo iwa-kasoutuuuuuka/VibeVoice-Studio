@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using Microsoft.Windows.ApplicationModel.Resources;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -52,6 +53,7 @@ namespace VibeVoiceNative.UI.ViewModels
         private readonly VibeVoiceApiServer _apiServer;
         private readonly ModelDownloadManager _downloadManager;
         private readonly Serilog.ILogger _logger;
+        private readonly ResourceLoader _resourceLoader;
         private float[]? _lastGeneratedAudio;
         private float[]? _currentAudioBuffer;
 
@@ -69,6 +71,9 @@ namespace VibeVoiceNative.UI.ViewModels
             _player = new VibeVoiceNative.UI.Audio.AudioPlayer();
             _apiServer = new VibeVoiceApiServer(ApiGenerateCallback);
             _downloadManager = new ModelDownloadManager();
+            _resourceLoader = new ResourceLoader();
+            
+            StatusMessage = _resourceLoader.GetString("StatusReady");
             
             string? baseDir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
             string logDir = Path.Combine(baseDir, "logs");
@@ -112,8 +117,8 @@ namespace VibeVoiceNative.UI.ViewModels
         [RelayCommand]
         public void ToggleApiServer()
         {
-            if (IsApiServerRunning) { _apiServer.Stop(); IsApiServerRunning = false; StatusMessage = "API Server Stopped / APIサーバー停止"; }
-            else { _apiServer.Start(); IsApiServerRunning = true; StatusMessage = "API Server Running at :5050 / サーバー起動中"; }
+            if (IsApiServerRunning) { _apiServer.Stop(); IsApiServerRunning = false; StatusMessage = "API Server Stopped"; }
+            else { _apiServer.Start(); IsApiServerRunning = true; StatusMessage = "API Server Running"; }
         }
 
         [RelayCommand]
@@ -121,7 +126,7 @@ namespace VibeVoiceNative.UI.ViewModels
         {
             try {
                 IsEngineReady = false;
-                StatusMessage = "Loading Engine... / エンジン起動中...";
+                StatusMessage = _resourceLoader.GetString("StatusLoading");
                 string? exeDir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
                 string modelDir = Path.Combine(exeDir, "models");
                 
@@ -138,10 +143,10 @@ namespace VibeVoiceNative.UI.ViewModels
 
                 await _engine.InitializeAsync(modelDir, SelectedDevice);
                 IsEngineReady = true;
-                StatusMessage = "Engine Ready / 準備完了";
+                StatusMessage = _resourceLoader.GetString("StatusReady");
             } catch (Exception ex) {
                 _logger.Error(ex, "Init error");
-                StatusMessage = "Init Error / 初期化失敗";
+                StatusMessage = _resourceLoader.GetString("StatusError");
             }
         }
 
@@ -153,7 +158,7 @@ namespace VibeVoiceNative.UI.ViewModels
 
             try {
                 IsGenerating = true;
-                StatusMessage = "Generating... / 音声生成中...";
+                StatusMessage = _resourceLoader.GetString("StatusGenerating");
                 var allAudio = new List<float>();
                 _player.Stop();
                 _player.Play(SelectedAudioDevice?.Id);
@@ -172,10 +177,10 @@ namespace VibeVoiceNative.UI.ViewModels
                     }
                 }
                 _lastGeneratedAudio = AudioPreProcessor.CleanAndNormalize(allAudio.ToArray());
-                StatusMessage = "Complete / 生成完了";
+                StatusMessage = _resourceLoader.GetString("StatusComplete");
             } catch (Exception ex) {
                 _logger.Error(ex, "Gen error");
-                StatusMessage = "Gen Error / 生成失敗";
+                StatusMessage = _resourceLoader.GetString("StatusError");
             } finally { IsGenerating = false; Progress = 100; }
         }
 
@@ -228,14 +233,14 @@ namespace VibeVoiceNative.UI.ViewModels
                     VibeVoiceNative.Inference.Audio.AudioExporter.SaveAsWav(path, AudioPreProcessor.CleanAndNormalize(allAudio.ToArray()), 24000);
                     
                     Interlocked.Increment(ref completed);
-                    StatusMessage = $"Batch: {completed}/{script.Count} / 書き出し中...";
+                    StatusMessage = $"Batch: {completed}/{script.Count}";
                     Progress = (double)completed / script.Count * 100;
                 });
 
-                StatusMessage = "Batch Complete / 一括生成完了";
+                StatusMessage = _resourceLoader.GetString("StatusComplete");
             } catch (Exception ex) {
                 _logger.Error(ex, "Batch error");
-                StatusMessage = "Batch Error / 一括生成失敗";
+                StatusMessage = _resourceLoader.GetString("StatusError");
             } finally { IsGenerating = false; Progress = 100; }
         }
 
