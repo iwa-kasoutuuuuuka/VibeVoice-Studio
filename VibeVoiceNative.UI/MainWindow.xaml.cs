@@ -22,17 +22,29 @@ namespace VibeVoiceNative.UI
 
         public MainWindow()
         {
-            this.InitializeComponent();
-            this.Activated += MainWindow_Activated;
-            
-            SetupPickers();
+            try {
+                this.InitializeComponent();
+                
+                // Title のローカライズ
+                var rl = new Microsoft.Windows.ApplicationModel.Resources.ResourceLoader();
+                this.Title = rl.GetString("MainWindow/Title");
 
-            _renderTimer = this.DispatcherQueue.CreateTimer();
-            if (_renderTimer != null)
-            {
-                _renderTimer.Interval = TimeSpan.FromMilliseconds(33); // ~30fps
-                _renderTimer.Tick += (s, e) => WaveformCanvas.Invalidate();
-                _renderTimer.Start();
+                this.Activated += MainWindow_Activated;
+                
+                SetupPickers();
+
+                _renderTimer = this.DispatcherQueue.CreateTimer();
+                if (_renderTimer != null)
+                {
+                    _renderTimer.Interval = TimeSpan.FromMilliseconds(33); // ~30fps
+                    _renderTimer.Tick += (s, e) => {
+                        try { WaveformCanvas.Invalidate(); } catch {}
+                    };
+                    _renderTimer.Start();
+                }
+            } catch (Exception ex) {
+                System.IO.File.WriteAllText("startup_error.log", ex.ToString());
+                throw;
             }
         }
 
@@ -63,6 +75,11 @@ namespace VibeVoiceNative.UI
                 folderPicker.FileTypeFilter.Add("*");
                 var folder = await folderPicker.PickSingleFolderAsync();
                 return folder?.Path;
+            };
+
+            ViewModel.DispatcherAction = (action) =>
+            {
+                this.DispatcherQueue.TryEnqueue(() => action());
             };
         }
 

@@ -5,7 +5,7 @@
     xmlns:local="using:VibeVoiceNative.UI"
     xmlns:models="using:VibeVoiceNative.UI.Models"
     xmlns:ski="using:SkiaSharp.Views.Windows"
-    Title="VibeVoice Studio Ultimate (日本語 / English)">
+    Title="VibeVoice Studio Ultimate">
 
     <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.ColumnDefinitions>
@@ -28,14 +28,38 @@
                 <Button x:Uid="ToggleApiButton" Command="{x:Bind ViewModel.ToggleApiServerCommand}" HorizontalAlignment="Stretch"/>
                 
                 <TextBlock x:Uid="PerformanceHeader" FontWeight="SemiBold"/>
-                <StackPanel Spacing="2">
+                <StackPanel Spacing="5">
                     <TextBlock x:Uid="InferenceStepsLabel" FontSize="12"/>
                     <Slider Value="{x:Bind ViewModel.InferenceSteps, Mode=TwoWay}" Minimum="4" Maximum="50"/>
+                    <TextBlock x:Uid="SpeedLabel" FontSize="12"/>
+                    <Slider Value="{x:Bind ViewModel.Speed, Mode=TwoWay}" Minimum="0.5" Maximum="2.0" StepFrequency="0.1"/>
+                    <TextBlock x:Uid="PitchLabel" FontSize="12"/>
+                    <Slider Value="{x:Bind ViewModel.Pitch, Mode=TwoWay}" Minimum="-500" Maximum="500" StepFrequency="10"/>
                 </StackPanel>
 
                 <TextBlock x:Uid="DeviceHeader" FontWeight="SemiBold"/>
                 <ComboBox ItemsSource="{x:Bind ViewModel.InferenceDevices}" SelectedItem="{x:Bind ViewModel.SelectedDevice, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
                 <Button x:Uid="InitEngineButton" Command="{x:Bind ViewModel.InitializeEngineCommand}" HorizontalAlignment="Stretch"/>
+
+                <TextBlock x:Uid="VoiceGalleryHeader" FontWeight="SemiBold"/>
+                <StackPanel Spacing="5">
+                    <TextBlock x:Uid="RefAudioLabel" FontSize="12"/>
+                    <Grid ColumnSpacing="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Text="{x:Bind ViewModel.RefAudioPath, Mode=TwoWay}" FontSize="12"/>
+                        <Button Grid.Column="1" x:Uid="PickFileButton" Command="{x:Bind ViewModel.PickRefAudioFileCommand}"/>
+                    </Grid>
+                    <ListView ItemsSource="{x:Bind ViewModel.VoiceGallery}" SelectedItem="{x:Bind ViewModel.SelectedVoice, Mode=TwoWay}" MaxHeight="120" BorderThickness="1" BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:VoiceModel">
+                                <TextBlock Text="{x:Bind Name}"/>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
 
                 <TextBlock x:Uid="UserDictHeader" FontWeight="SemiBold"/>
                 <ListView ItemsSource="{x:Bind ViewModel.UserDictionary}" MaxHeight="80">
@@ -70,9 +94,9 @@
             </StackPanel>
             
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
-                <Button x:Uid="BatchExportButton" Command="{x:Bind ViewModel.BatchExportCommand}" Style="{StaticResource AccentButtonStyle}"/>
+                <Button x:Uid="BatchExportButton" Command="{x:Bind ViewModel.BatchExportCommand}" IsEnabled="{x:Bind ViewModel.NotBusy, Mode=OneWay}" Style="{StaticResource AccentButtonStyle}"/>
                 <Button x:Uid="StopButton" Command="{x:Bind ViewModel.StopCommand}"/>
-                <Button x:Uid="GenerateButton" Command="{x:Bind ViewModel.GenerateAudioCommand}" Width="150"/>
+                <Button x:Uid="GenerateButton" Command="{x:Bind ViewModel.GenerateAudioCommand}" IsEnabled="{x:Bind ViewModel.NotBusy, Mode=OneWay}" Width="150"/>
             </StackPanel>
         </Grid>
     </Grid>

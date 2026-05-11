@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Tokenizers.DotNet;
 using MeCab;
+using Serilog;
 
 namespace VibeVoiceNative.Inference.Text
 {
@@ -26,7 +27,7 @@ namespace VibeVoiceNative.Inference.Text
             if (File.Exists(tokenizerPath)) 
             {
                 try { _tokenizer = new Tokenizer(tokenizerPath); } 
-                catch (Exception ex) { Console.WriteLine($"[DEBUG] Tokenizer init failed: {ex.Message}"); }
+                catch (Exception ex) { Log.Error(ex, "Tokenizer init failed"); }
             }
 
             try
@@ -51,7 +52,7 @@ namespace VibeVoiceNative.Inference.Text
                 {
                     _mecab = MeCabTagger.Create(new MeCabParam { DicDir = dicPath });
                 }
-            } catch (Exception ex) { Console.WriteLine($"[DEBUG] MeCab init failed: {ex.Message}"); }
+            } catch (Exception ex) { Log.Error(ex, "MeCab init failed"); }
         }
 
         public long[] TextToTokens(string text, string language)

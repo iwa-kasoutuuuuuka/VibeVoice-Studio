@@ -32,9 +32,10 @@ namespace VibeVoiceNative.UI.ViewModels
         [ObservableProperty] public partial string InputText { get; set; } = string.Empty;
         [ObservableProperty] public partial bool IsEnglish { get; set; }
         [ObservableProperty] public partial bool IsGenerating { get; set; }
-        [ObservableProperty] public partial string SelectedDevice { get; set; } = "DirectML";
+        [ObservableProperty] public partial string SelectedDevice { get; set; } = "CPU";
         [ObservableProperty] public partial int InferenceSteps { get; set; } = 16;
         [ObservableProperty] public partial bool IsApiServerRunning { get; set; }
+        [ObservableProperty] [NotifyPropertyChangedFor(nameof(NotBusy))] public partial bool IsBusy { get; set; }
 
         public ObservableCollection<VoiceModel> VoiceGallery { get; } = new();
         public ObservableCollection<AudioDevice> AudioDevices { get; } = new();
@@ -47,6 +48,7 @@ namespace VibeVoiceNative.UI.ViewModels
         public Func<Task<string?>>? PickSaveFileAsync { get; set; }
         public Func<Task<string?>>? PickRefAudioFileAsync { get; set; }
         public Func<Task<string?>>? PickFolderAsync { get; set; }
+        public Action<Action>? DispatcherAction { get; set; }
 
         private readonly IVibeVoiceEngine _engine;
         private readonly VibeVoiceNative.UI.Audio.AudioPlayer _player;
@@ -57,6 +59,8 @@ namespace VibeVoiceNative.UI.ViewModels
         private float[]? _lastGeneratedAudio;
         private float[]? _currentAudioBuffer;
 
+        public bool NotBusy => !IsBusy;
+        
         public float[]? CurrentAudioBuffer
         {
             get => _currentAudioBuffer;
@@ -75,12 +79,21 @@ namespace VibeVoiceNative.UI.ViewModels
             
             StatusMessage = _resourceLoader.GetString("StatusReady");
             
-            string? baseDir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
-            string logDir = Path.Combine(baseDir, "logs");
+            // ポータブル構成に対応したルートパスの取得
+            string? exeDir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
+            string rootDir = exeDir;
+            if (Path.GetFileName(exeDir).Equals("app", StringComparison.OrdinalIgnoreCase) || 
+                Path.GetFileName(exeDir).Equals("bin", StringComparison.OrdinalIgnoreCase))
+            {
+                rootDir = Path.GetDirectoryName(exeDir) ?? exeDir;
+            }
+
+            string logDir = Path.Combine(rootDir, "logs");
             if (!Directory.Exists(logDir)) Directory.CreateDirectory(logDir);
-            _logger = new LoggerConfiguration()
-                .WriteTo.File(Path.Combine(logDir, "ui_.log"), rollingInterval: RollingInterval.Day)
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.File(Path.Combine(logDir, "ui_.log"), rollingInterval: RollingInterval.Day, flushToDiskInterval: TimeSpan.FromSeconds(1))
                 .CreateLogger();
+            _logger = Log.Logger;
             
             SetupAudioDevices();
             InferenceSteps = 16;
@@ -125,20 +138,24 @@ namespace VibeVoiceNative.UI.ViewModels
         public async Task InitializeEngine()
         {
             try {
+                IsBusy = true;
                 IsEngineReady = false;
                 StatusMessage = _resourceLoader.GetString("StatusLoading");
                 string? exeDir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
-                string modelDir = Path.Combine(exeDir, "models");
+                string rootDir = exeDir;
+                if (Path.GetFileName(exeDir).Equals("app", StringComparison.OrdinalIgnoreCase) || 
+                    Path.GetFileName(exeDir).Equals("bin", StringComparison.OrdinalIgnoreCase))
+                {
+                    rootDir = Path.GetDirectoryName(exeDir) ?? exeDir;
+                }
+
+                string modelDir = Path.Combine(rootDir, "models");
                 
-                // bin フォルダに入っている場合、一つ上の階層も確認
+                // フォールバック: ルートに見つからない場合は実行ファイル直下も確認
                 if (!Directory.Exists(modelDir))
                 {
-                    string? parentDir = Path.GetDirectoryName(exeDir);
-                    if (parentDir != null)
-                    {
-                        string altModelDir = Path.Combine(parentDir, "models");
-                        if (Directory.Exists(altModelDir)) modelDir = altModelDir;
-                    }
+                    string altModelDir = Path.Combine(exeDir, "models");
+                    if (Directory.Exists(altModelDir)) modelDir = altModelDir;
                 }
 
                 await _engine.InitializeAsync(modelDir, SelectedDevice);
@@ -146,8 +163,8 @@ namespace VibeVoiceNative.UI.ViewModels
                 StatusMessage = _resourceLoader.GetString("StatusReady");
             } catch (Exception ex) {
                 _logger.Error(ex, "Init error");
-                StatusMessage = _resourceLoader.GetString("StatusError");
-            }
+                StatusMessage = $"{_resourceLoader.GetString("StatusError")}: {ex.Message}";
+            } finally { IsBusy = false; }
         }
 
         [RelayCommand]
@@ -211,41 +228,62 @@ namespace VibeVoiceNative.UI.ViewModels
         public async Task BatchExport()
         {
             if (string.IsNullOrWhiteSpace(InputText) || PickFolderAsync == null) return;
-            var folder = await PickFolderAsync();
-            if (string.IsNullOrEmpty(folder)) return;
-
+            IsBusy = true;
             try {
+                if (!IsEngineReady) await InitializeEngine();
+                if (!IsEngineReady) return; 
+
+                var folder = await PickFolderAsync();
+                if (string.IsNullOrEmpty(folder)) return;
+
                 IsGenerating = true;
                 var script = ParseScript(InputText);
                 int completed = 0;
 
                 var options = new ParallelOptions { MaxDegreeOfParallelism = (SelectedDevice == "CPU") ? 2 : 4 };
                 
-                await Parallel.ForEachAsync(script.Select((item, index) => (item.text, item.voicePath, index)), options, async (item, ct) => {
-                    if (!IsGenerating) return;
-                    var allAudio = new List<float>();
-                    string voice = item.voicePath ?? RefAudioPath;
-                    await foreach (var chunk in _engine.GenerateAudioStreamingAsync(item.text, voice, Speed, Pitch, InferenceSteps, new Progress<double>())) {
-                        if (!IsGenerating) break;
-                        allAudio.AddRange(chunk);
-                    }
-                    string path = Path.Combine(folder, $"{item.index + 1:D3}_{item.text.Substring(0, Math.Min(5, item.text.Length))}.wav");
-                    VibeVoiceNative.Inference.Audio.AudioExporter.SaveAsWav(path, AudioPreProcessor.CleanAndNormalize(allAudio.ToArray()), 24000);
-                    
-                    Interlocked.Increment(ref completed);
-                    StatusMessage = $"Batch: {completed}/{script.Count}";
-                    Progress = (double)completed / script.Count * 100;
+                await Task.Run(async () => {
+                    await Parallel.ForEachAsync(script.Select((item, index) => (item.text, item.voicePath, index)), options, async (item, ct) => {
+                        if (!IsGenerating) return;
+                        var allAudio = new List<float>();
+                        string voice = item.voicePath ?? RefAudioPath;
+                        
+                        // 進捗メッセージの更新
+                        if (DispatcherAction != null) {
+                            DispatcherAction(() => StatusMessage = $"Generating ({completed + 1}/{script.Count}): {item.text.Substring(0, Math.Min(10, item.text.Length))}...");
+                        }
+
+                        await foreach (var chunk in _engine.GenerateAudioStreamingAsync(item.text, voice, Speed, Pitch, InferenceSteps, new Progress<double>())) {
+                            if (!IsGenerating) break;
+                            allAudio.AddRange(chunk);
+                        }
+                        
+                        if (allAudio.Count > 0) {
+                            string path = Path.Combine(folder, $"{item.index + 1:D3}_{item.text.Substring(0, Math.Min(5, item.text.Length))}.wav");
+                            VibeVoiceNative.Inference.Audio.AudioExporter.SaveAsWav(path, AudioPreProcessor.CleanAndNormalize(allAudio.ToArray()), 24000);
+                        }
+                        
+                        Interlocked.Increment(ref completed);
+                        if (DispatcherAction != null)
+                        {
+                            DispatcherAction(() => {
+                                StatusMessage = $"Batch: {completed}/{script.Count}";
+                                Progress = (double)completed / script.Count * 100;
+                            });
+                        }
+                    });
                 });
 
                 StatusMessage = _resourceLoader.GetString("StatusComplete");
             } catch (Exception ex) {
                 _logger.Error(ex, "Batch error");
                 StatusMessage = _resourceLoader.GetString("StatusError");
-            } finally { IsGenerating = false; Progress = 100; }
+            } finally { IsGenerating = false; IsBusy = false; Progress = 100; }
         }
 
         [RelayCommand] public void Stop() { _engine.Stop(); _player.Stop(); IsGenerating = false; }
         [RelayCommand] public async Task SaveAudio() { if (_lastGeneratedAudio != null && PickSaveFileAsync != null) { var path = await PickSaveFileAsync(); if (!string.IsNullOrEmpty(path)) VibeVoiceNative.Inference.Audio.AudioExporter.SaveAsWav(path, _lastGeneratedAudio, 24000); } }
+        [RelayCommand] public async Task PickRefAudioFile() { if (PickRefAudioFileAsync != null) { var path = await PickRefAudioFileAsync(); if (!string.IsNullOrEmpty(path)) RefAudioPath = path; } }
         [RelayCommand] public void AddUserDict(string original) { if (!string.IsNullOrWhiteSpace(original)) UserDictionary.Add(new UserDictionaryEntry { OriginalText = original }); }
         [RelayCommand] public void RemoveUserDict(UserDictionaryEntry entry) { UserDictionary.Remove(entry); }
 

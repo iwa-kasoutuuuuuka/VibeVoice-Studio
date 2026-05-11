@@ -1,4 +1,4 @@
-# VibeVoice Studio Ultimate 技術仕様書
+# VibeVoice Studio Ultimate - プロジェクト仕様書 (v1.1.2)
 
 ## 1. システムアーキテクチャ
 VibeVoice Studio Ultimate は、C# / WinUI 3 をベースとしたデスクトップアプリケーションであり、推論エンジンには ONNX Runtime を採用しています。
@@ -6,6 +6,10 @@ VibeVoice Studio Ultimate は、C# / WinUI 3 をベースとしたデスクト�
 ### 構成コンポーネント
 - **UI 層 (WinUI 3)**: モダンな Fluent Design を採用したユーザーインターフェース。
 - **推論層 (Inference Engine)**: ONNX Runtime によるマルチデバイス（CPU/GPU）推論。
+- **推論パイプライン (v1.1.2)**: 
+  - Text Encoder (text_to_condition) -> **LM Prefill/Step (AR Loop)** -> CFM Diffusion -> Vocoder
+  - 自己回帰（AR）ループの統合により、文脈を考慮した自然な韻律の生成を実現。
+  - `VibeVoicePipeline.cs` 内に KV Cache を利用した効率的な推論ループを実装。
 - **NLP 層 (Text Processing)**: MeCab および Tokenizers.DotNet による高度なテキスト解析。
 - **API 層 (REST Server)**: 外部連携用の軽量 HTTP サーバー。
 - **ローカライズ層**: Resources.resw による日本語/英語の動的切り替え。

@@ -32,11 +32,19 @@ namespace VibeVoiceNative.Inference
         private string? _modelDir;
         private string _currentDevice = "CPU";
         private readonly Serilog.ILogger _logger;
+        private VibeVoicePipeline? _activePipeline;
 
         public VibeVoiceOnnxEngine()
         {
-            string? baseDir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
-            string logDir = Path.Combine(baseDir, "logs");
+            string? exeDir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
+            string rootDir = exeDir;
+            if (Path.GetFileName(exeDir).Equals("app", StringComparison.OrdinalIgnoreCase) || 
+                Path.GetFileName(exeDir).Equals("bin", StringComparison.OrdinalIgnoreCase))
+            {
+                rootDir = Path.GetDirectoryName(exeDir) ?? exeDir;
+            }
+
+            string logDir = Path.Combine(rootDir, "logs");
             if (!Directory.Exists(logDir)) Directory.CreateDirectory(logDir);
             _logger = new LoggerConfiguration()
                 .WriteTo.File(Path.Combine(logDir, "engine_.log"), rollingInterval: RollingInterval.Day)
@@ -139,16 +147,20 @@ namespace VibeVoiceNative.Inference
             if (!_isInitialized) throw new InvalidOperationException("Engine not initialized.");
             _stopRequested = false;
 
-            var pipeline = new VibeVoicePipeline(_textEncoder, _lmPrefill, _lmStep, _textToCond, _predictionHead, _vocoder, _acousticConnector, _textProcessor!);
+            _activePipeline = new VibeVoicePipeline(_textEncoder, _lmPrefill, _lmStep, _textToCond, _predictionHead, _vocoder, _acousticConnector, _textProcessor!);
             
-            await foreach (var chunk in pipeline.RunInferenceStreaming(text, refAudioPath, speed, pitch, steps, progress, context))
+            await foreach (var chunk in _activePipeline.RunInferenceStreaming(text, refAudioPath, speed, pitch, steps, progress, context))
             {
                 if (_stopRequested) yield break;
                 yield return chunk;
             }
         }
 
-        public void Stop() { _stopRequested = true; }
+        public void Stop() 
+        { 
+            _stopRequested = true; 
+            _activePipeline?.RequestStop();
+        }
         public void Dispose()
         {
             _textEncoder?.Dispose(); _lmPrefill?.Dispose(); _lmStep?.Dispose();
